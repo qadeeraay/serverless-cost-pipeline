@@ -8,17 +8,17 @@
 
 | Manifest | Kubernetes Kind | Description & Purpose |
 |---|---|---|
-| [`k8s-function.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/k8s-function.yaml) | `Deployment`, `Service` | Primary hardened function pod definition (`readOnlyRootFilesystem: true`, UID 1000, RAM `/tmp`) |
-| [`hpa.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/hpa.yaml) | `HorizontalPodAutoscaler` | Dynamic elasticity: 1 $\rightarrow$ 5 replicas with 15s rapid scale-down cooldown |
-| [`minio.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/minio.yaml) | `Deployment`, `Service` | Decoupled S3 object storage (API Port 9000 & Console Port 9001) |
-| [`kind-config.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/kind-config.yaml) | `Cluster` | Local Kubernetes multi-port mapping configuration (8080, 9000, 9001) |
-| [`function.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/function.yaml) | `Function` | OpenFaaS Custom Resource Definition (CRD) specification |
-| [`nats.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/nats.yaml) | `StatefulSet`, `Service`, `Job` | Real NATS JetStream broker with persistent WAL storage; bootstraps the `S3-EVENTS` and `DLQ-POISON` streams referenced in the failure-handling design |
-| [`nats-connector-deployment.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/nats-connector-deployment.yaml) | `Deployment`, `ConfigMap` | Runs `nats_openfaas_connector.py` in-cluster: pulls events off JetStream and invokes the OpenFaaS gateway, with retry/DLQ logic |
-| [`configure_minio_nats_bridge.sh`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/configure_minio_nats_bridge.sh) | shell script | Wires MinIO bucket notifications to publish real `s3:ObjectCreated` events into NATS JetStream |
-| [`setup_velero.sh`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/setup_velero.sh) | shell script | Deploys and configures Velero with AWS S3 plugin pointing to MinIO (`velero-backups` bucket) |
-| [`backup_restore_demo.sh`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/backup_restore_demo.sh) | shell script | Full automated backup creation, MinIO S3 verification, and restore test runner |
-| [`velero-schedule.yaml`](file:///home/qadeer/serverless-cost-pipeline/infrastructure/velero-schedule.yaml) | `Schedule` | Automated daily snapshot schedule for `openfaas`, `openfaas-fn`, `nats`, and `minio` |
+| [`k8s-function.yaml`](k8s-function.yaml) | `Deployment`, `Service` | Primary hardened function pod definition (`readOnlyRootFilesystem: true`, UID 1000, RAM `/tmp`) |
+| [`hpa.yaml`](hpa.yaml) | `HorizontalPodAutoscaler` | Dynamic elasticity: 1 $\rightarrow$ 5 replicas with 15s rapid scale-down cooldown |
+| [`minio.yaml`](minio.yaml) | `Deployment`, `Service` | Decoupled S3 object storage (API Port 9000 & Console Port 9001) |
+| [`kind-config.yaml`](kind-config.yaml) | `Cluster` | Local Kubernetes multi-port mapping configuration (8080, 9000, 9001) |
+| [`function.yaml`](function.yaml) | `Function` | OpenFaaS Custom Resource Definition (CRD) specification |
+| [`nats.yaml`](nats.yaml) | `StatefulSet`, `Service`, `Job` | Real NATS JetStream broker with persistent WAL storage; bootstraps the `S3-EVENTS` and `DLQ-POISON` streams referenced in the failure-handling design |
+| [`nats-connector-deployment.yaml`](nats-connector-deployment.yaml) | `Deployment`, `ConfigMap` | Runs `nats_openfaas_connector.py` in-cluster: pulls events off JetStream and invokes the OpenFaaS gateway, with retry/DLQ logic |
+| [`configure_minio_nats_bridge.sh`](configure_minio_nats_bridge.sh) | shell script | Wires MinIO bucket notifications to publish real `s3:ObjectCreated` events into NATS JetStream |
+| [`setup_velero.sh`](setup_velero.sh) | shell script | Deploys and configures Velero with AWS S3 plugin pointing to MinIO (`velero-backups` bucket) |
+| [`backup_restore_demo.sh`](backup_restore_demo.sh) | shell script | Full automated backup creation, MinIO S3 verification, and restore test runner |
+| [`velero-schedule.yaml`](velero-schedule.yaml) | `Schedule` | Automated daily snapshot schedule for `openfaas`, `openfaas-fn`, `nats`, and `minio` |
 
 ---
 
@@ -26,13 +26,13 @@
 
 ```bash
 # Apply hardened function deployment
-kubectl apply -f /home/qadeer/serverless-cost-pipeline/infrastructure/k8s-function.yaml
+kubectl apply -f infrastructure/k8s-function.yaml
 
 # Apply Horizontal Pod Autoscaler
-kubectl apply -f /home/qadeer/serverless-cost-pipeline/infrastructure/hpa.yaml
+kubectl apply -f infrastructure/hpa.yaml
 
 # Apply MinIO S3 storage
-kubectl apply -f /home/qadeer/serverless-cost-pipeline/infrastructure/minio.yaml
+kubectl apply -f infrastructure/minio.yaml
 ```
 
 ---

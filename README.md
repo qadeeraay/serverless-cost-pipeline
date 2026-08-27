@@ -1,9 +1,9 @@
 # 🛡️ Serverless Event-Driven Image Processing & FinOps Pipeline
 
-[![DevSecOps Compliance](https://img.shields.io/badge/DevSecOps%20Compliance-10%2F10%20Verified-success?style=for-the-badge&logo=shield)](file:///home/qadeer/serverless-cost-pipeline/security_suite)
-[![FinOps Cost Reduction](https://img.shields.io/badge/FinOps%20Cost%20Reduction-99.8%25-blue?style=for-the-badge&logo=cashapp)](file:///home/qadeer/serverless-cost-pipeline/testing_suite)
-[![Cosign Container Signed](https://img.shields.io/badge/Cosign%20ECDSA-P--256%20Verified-brightgreen?style=for-the-badge&logo=docker)](file:///home/qadeer/serverless-cost-pipeline/security_suite/security_keys)
-[![Architecture Specification](https://img.shields.io/badge/Architecture-Cloud--Native%20Serverless-purple?style=for-the-badge)](file:///home/qadeer/serverless-cost-pipeline/ARCHITECTURE.md)
+[![DevSecOps Compliance](https://img.shields.io/badge/DevSecOps%20Compliance-10%2F10%20Verified-success?style=for-the-badge&logo=shield)](security_suite)
+[![FinOps Cost Reduction](https://img.shields.io/badge/FinOps%20Cost%20Reduction-99.8%25-blue?style=for-the-badge&logo=cashapp)](testing_suite)
+[![Cosign Container Signed](https://img.shields.io/badge/Cosign%20ECDSA-P--256%20Verified-brightgreen?style=for-the-badge&logo=docker)](security_suite/security_keys)
+[![Architecture Specification](https://img.shields.io/badge/Architecture-Cloud--Native%20Serverless-purple?style=for-the-badge)](ARCHITECTURE.md)
 
 
 ## 📌 Executive Summary

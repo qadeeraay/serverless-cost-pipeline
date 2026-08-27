@@ -10,11 +10,11 @@ This directory contains all security configurations, scripts, and cryptographic 
 
 | File | Type | Purpose & Scope |
 |---|---|---|
-| [`1_run_security_audit.py`](file:///home/qadeer/serverless-cost-pipeline/security_suite/1_run_security_audit.py) | **Live Audit Script** | Runs live checks and verifies **10/10 compliance score** |
-| [`2_verify_cosign_signature.py`](file:///home/qadeer/serverless-cost-pipeline/security_suite/2_verify_cosign_signature.py) | **Supply-Chain Tool** | Demonstrates **Cosign ECDSA container image signature verification** |
-| [`network_policy_and_secrets.yaml`](file:///home/qadeer/serverless-cost-pipeline/security_suite/network_policy_and_secrets.yaml) | **Kubernetes Manifest** | **Zero-Trust NetworkPolicy** (Port 9000 & 53) + Secret encryption |
-| [`kyverno_cosign_policy.yaml`](file:///home/qadeer/serverless-cost-pipeline/security_suite/kyverno_cosign_policy.yaml) | **Admission Policy** | **Kyverno Enforce Policy** for Cosign image signature verification |
-| [`security_keys/`](file:///home/qadeer/serverless-cost-pipeline/security_suite/security_keys/) | **Key Vault** | ECDSA P-256 `.key`, `.pub`, and `.sig` signature files |
+| [`1_run_security_audit.py`](1_run_security_audit.py) | **Live Audit Script** | Runs live checks and verifies **10/10 compliance score** |
+| [`2_verify_cosign_signature.py`](2_verify_cosign_signature.py) | **Supply-Chain Tool** | Demonstrates **Cosign ECDSA container image signature verification** |
+| [`network_policy_and_secrets.yaml`](network_policy_and_secrets.yaml) | **Kubernetes Manifest** | **Zero-Trust NetworkPolicy** (Port 9000 & 53) + Secret encryption |
+| [`kyverno_cosign_policy.yaml`](kyverno_cosign_policy.yaml) | **Admission Policy** | **Kyverno Enforce Policy** for Cosign image signature verification |
+| [`security_keys/`](security_keys/) | **Key Vault** | ECDSA P-256 `.key`, `.pub`, and `.sig` signature files |
 
 ---
 

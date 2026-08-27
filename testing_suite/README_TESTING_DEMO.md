@@ -8,11 +8,11 @@
 
 | Script | Purpose | Execution Mode / Options |
 |---|---|---|
-| [`1_upload_and_process.py`](file:///home/qadeer/serverless-cost-pipeline/testing_suite/1_upload_and_process.py) | **Instant Image Upload & Transcoding** | Live demo: Sync (HTTP 200) & Async NATS (`--async`) |
-| [`2_load_test_autoscaling.py`](file:///home/qadeer/serverless-cost-pipeline/testing_suite/2_load_test_autoscaling.py) | **Unified Testing & Lifecycle Engine** | **Interactive Menu** (Load Test, Scale-to-Zero & Unit Tests) |
-| [`3_finops_cost_benchmark.py`](file:///home/qadeer/serverless-cost-pipeline/testing_suite/3_finops_cost_benchmark.py) | **FinOps Multi-Cloud Cost Benchmark** | Generates p50/p95 latency and **99.8% cost savings** report |
-| [`4_event_driven_s3_trigger.py`](file:///home/qadeer/serverless-cost-pipeline/testing_suite/4_event_driven_s3_trigger.py) | **Reactive S3 CloudEvent Trigger** | Demonstrates pure `s3:ObjectCreated:Put` event handling |
-| [`5_chaos_and_tracing_test.py`](file:///home/qadeer/serverless-cost-pipeline/testing_suite/5_chaos_and_tracing_test.py) | **Chaos & Security Attack Verification** | Automated 5-stage attack & W3C distributed tracing test |
+| [`1_upload_and_process.py`](1_upload_and_process.py) | **Instant Image Upload & Transcoding** | Live demo: Sync (HTTP 200) & Async NATS (`--async`) |
+| [`2_load_test_autoscaling.py`](2_load_test_autoscaling.py) | **Unified Testing & Lifecycle Engine** | **Interactive Menu** (Load Test, Scale-to-Zero & Unit Tests) |
+| [`3_finops_cost_benchmark.py`](3_finops_cost_benchmark.py) | **FinOps Multi-Cloud Cost Benchmark** | Generates p50/p95 latency and **99.8% cost savings** report |
+| [`4_event_driven_s3_trigger.py`](4_event_driven_s3_trigger.py) | **Reactive S3 CloudEvent Trigger** | Demonstrates pure `s3:ObjectCreated:Put` event handling |
+| [`5_chaos_and_tracing_test.py`](5_chaos_and_tracing_test.py) | **Chaos & Security Attack Verification** | Automated 5-stage attack & W3C distributed tracing test |
 
 ---
 

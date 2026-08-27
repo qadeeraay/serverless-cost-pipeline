@@ -10,47 +10,56 @@
 
 ```mermaid
 flowchart TB
-    subgraph ClientZone ["🌐 Ingestion & Testing Zone"]
-        Client["Client / Stress Tester\n(1_upload_and_process.py)"]
+    subgraph ClientZone ["🌐 Ingestion, Client & Testing Zone"]
+        Client["Client Applications / CLI\n(1_upload_and_process.py)"]
         LoadGen["High-Concurrency Load Gen\n(2_load_test_autoscaling.py)"]
+        S3Trigger["S3 CloudEvent Generator\n(4_event_driven_s3_trigger.py)"]
     end
 
     subgraph K8sCluster ["☸️ Kubernetes Kind Cluster (Zero-Trust VPC)"]
-        subgraph OpenFaaSGW ["Ingress Namespace: openfaas"]
+        subgraph OpenFaaSGW ["Ingress & Messaging Tier (Namespace: openfaas)"]
             GW["OpenFaaS Gateway\n(Port 8080 : basic-auth)"]
+            NATS["NATS JetStream Broker (:4222)\nStreams: S3-EVENTS | DLQ-POISON"]
+            Connector["NATS-OpenFaaS Connector\n(In-Cluster Queue Consumer)"]
             Idler["FinOps Auto-Idler Controller\n(Scale-to-Zero Enforcer)"]
         end
 
-        subgraph FunctionNS ["Function Namespace: openfaas-fn (Isolated)"]
-            HPA["Horizontal Pod Autoscaler\n(1 to 5 Replicas / CPU >10%)"]
+        subgraph FunctionNS ["Stateless Compute Fleet (Namespace: openfaas-fn)"]
+            HPA["Horizontal Pod Autoscaler\n(1 to 5 Replicas / CPU >10% / 15s Cooldown)"]
             
             subgraph Pod ["Hardened Pod: image-processor-app"]
                 direction TB
                 SecContext["SecurityContext:\n• UID 1000 (Non-Root)\n• readOnlyRootFilesystem: true\n• drop: ALL capabilities\n• seccompProfile: RuntimeDefault"]
-                Handler["Python 3.12 Engine:\n• Magic Bytes Header Filter\n• Bucket Whitelist & Path Traversal Guard\n• Max 30MP Decompression Cap\n• Pillow C-Libwebp (method=0)\n• EXIF Privacy Sanitizer\n• Resilient MinIO Connection Pool"]
-                RAMDisk[("Ephemeral RAM Scratch\n/tmp (32MB Memory Cap)")]
+                Handler["Python 3.12 + C-Libwebp Engine:\n• Magic Bytes Header Filter (16B)\n• Bucket Whitelist & Path Traversal Guard\n• Max 30MP Decompression Cap\n• Pillow C-Libwebp (quality=65, method=0)\n• In-Place EXIF Privacy Sanitizer\n• In-Memory SHA-256 ETag Micro-Cache\n• OpenTelemetry W3C TraceContext"]
+                RAMDisk[("Ephemeral RAM Scratchpad\n/tmp (32MB tmpfs Memory Cap)")]
             end
         end
 
-        subgraph StorageNS ["Storage Namespace: minio"]
-            MinIO["MinIO S3 Object Storage\n(Bucket: uploads / processed\nPorts 9000 & 9001)"]
+        subgraph StorageNS ["Storage & Disaster Recovery (Namespace: default)"]
+            MinIO["MinIO S3 Object Storage (:9000)\nBuckets: uploads | processed | velero-backups"]
+            Velero["Velero Disaster Recovery\n(Automated Daily S3 Snapshot Schedule)"]
         end
 
-        subgraph PolicyCtrl ["🛡️ DevSecOps & Governance"]
-            NetPol["NetworkPolicy:\n• Ingress: openfaas:8080 only\n• Egress: minio:9000 & DNS:53 only"]
-            Cosign["Cosign ECDSA NIST P-256\nContainer Supply-Chain Signing"]
+        subgraph PolicyCtrl ["🛡️ DevSecOps & Supply-Chain Governance"]
+            NetPol["NetworkPolicy (Default-Deny):\n• Ingress: openfaas:8080 only\n• Egress: minio:9000 & DNS:53 only"]
+            Cosign["Cosign ECDSA NIST P-256\nContainer Image Digest Verification"]
         end
     end
 
-    Client -->|1. Upload Raw Image| MinIO
-    Client -->|2. Trigger Invocation| GW
-    LoadGen -->|Burst HTTP POST| GW
+    Client -->|1A. Sync Image Transcode| GW
+    Client -->|1B. Upload Raw Image| MinIO
+    MinIO -.->|Event Notification| NATS
+    NATS -->|Pull Batch Events| Connector
+    Connector -->|Trigger Serverless Function| GW
+    LoadGen -->|Burst Concurrent Invocations| GW
     GW -->|Zero-Trust Ingress TCP 8080| Pod
     HPA -.->|Dynamic Replicas 1->5| Pod
-    Idler -.->|Scale to 0 on Inactivity| Pod
-    Pod -->|Stream & Transcode| RAMDisk
+    Idler -.->|Scale to 0 after 20s Inactivity| Pod
+    Pod -->|Single-Pass Memory Stream| RAMDisk
     Pod -->|Zero-Trust Egress TCP 9000| MinIO
+    Velero -.->|Backup Snapshots| MinIO
     NetPol --- Pod
+    Cosign -.->|Validate Image Signature| Pod
 ```
 
 ---
@@ -62,29 +71,30 @@ sequenceDiagram
     autonumber
     actor User as Client / User
     participant GW as OpenFaaS Gateway (:8080)
+    participant NATS as NATS JetStream (:4222)
     participant Pod as image-processor-app Pod
     participant Storage as MinIO S3 (:9000)
 
-    Note over User,Storage: Boundary 1: Client Edge to Cluster Gateway
-    User->>Storage: PUT uploads/raw_image.jpg (S3 API)
-    User->>GW: POST /function/image-processor-app (Basic-Auth JWT)
-
-    Note over GW,Pod: Boundary 2: NetworkPolicy Micro-Segmentation (Port 8080)
-    GW->>Pod: Forward HTTP Request to Watchdog (:8080)
-    
-    Note over Pod: Boundary 3: Container Security Isolation & Input Validation
-    rect rgb(240, 248, 255)
-        Pod->>Pod: 1. Verify Bucket Whitelist (uploads/raw-images) & Path Traversal Check
-        Pod->>Storage: GET uploads/raw_image.jpg (TCP 9000 with Retry Backoff)
-        Pod->>Pod: 2. Validate Binary Magic Bytes (PNG/JPEG/WEBP)
-        Pod->>Pod: 3. Enforce 30MP Decompression Bomb Cap
-        Pod->>Pod: 4. Strip EXIF GPS/Camera Privacy Metadata
-        Pod->>Pod: 5. Transcode to WebP (C-Libwebp method=0) in RAM /tmp
-        Pod->>Storage: PUT processed/image_optimized.webp (TCP 9000)
+    alt 1. Synchronous Invocation Path
+        User->>GW: POST /function/image-processor-app (Image Payload)
+        GW->>Pod: Forward Request to Watchdog (:8080)
+        Note over Pod: Security Boundary & In-Memory Pipeline
+        rect rgb(240, 248, 255)
+            Pod->>Pod: 1. Validate 16-Byte Binary Magic Bytes (PNG/JPEG/WEBP)
+            Pod->>Pod: 2. Check 30MP Decompression Cap & Strip EXIF
+            Pod->>Pod: 3. C-Libwebp Transcode (quality=65, method=0) in RAM /tmp
+            Pod->>Storage: PUT processed/optimized.webp (TCP 9000)
+        end
+        Pod-->>GW: HTTP 200 OK + FinOps Telemetry JSON
+        GW-->>User: HTTP 200 OK (WebP Stream + Telemetry)
+    else 2. Asynchronous Event-Driven Path
+        User->>Storage: PUT uploads/raw_image.jpg (S3 API)
+        Storage-->>NATS: Publish s3:ObjectCreated:Put Event
+        NATS-->>User: HTTP 202 Accepted (Instant Non-Blocking)
+        NATS->>Pod: Pull Event & Invoke Worker
+        Pod->>Storage: GET uploads/raw_image.jpg
+        Pod->>Storage: PUT processed/raw_image_optimized.webp
     end
-
-    Pod-->>GW: HTTP 200 OK + FinOps Telemetry JSON
-    GW-->>User: HTTP 200 OK (Latency & Cost Savings Payload)
 ```
 
 ---

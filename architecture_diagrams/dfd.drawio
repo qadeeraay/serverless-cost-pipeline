@@ -8,8 +8,8 @@
         <!-- ========================================================================= -->
         <!-- HEADER                                                                    -->
         <!-- ========================================================================= -->
-        <mxCell id="title" value="DATA FLOW DIAGRAM (DFD) — SYNCHRONOUS &amp; ASYNCHRONOUS PIPELINE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;fontColor=#ffffff;fontSize=14;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="40" y="25" width="1020" height="45" as="geometry" />
+        <mxCell id="title" value="DATA FLOW DIAGRAM (DFD) — SYNCHRONOUS &amp; ASYNCHRONOUS SERVERLESS FINOPS PIPELINE&#xa;Maintainer: Qadeer Aslam (qadeer016) | Enterprise Cloud Architecture Specification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;fontColor=#ffffff;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1020" height="50" as="geometry" />
         </mxCell>
 
         <!-- ========================================================================= -->
@@ -48,7 +48,7 @@
         <!-- ========================================================================= -->
         <!-- 4. PROCESS 3: TRANSCODE                                                   -->
         <!-- ========================================================================= -->
-        <mxCell id="p3" value="&lt;b&gt;3. Transcode&lt;/b&gt;&lt;br&gt;Convert to WebP&lt;br&gt;&amp; Strip EXIF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="p3" value="&lt;b&gt;3. Transcode&lt;/b&gt;&lt;br&gt;Convert to WebP (method=0)&lt;br&gt;&amp; Strip EXIF Privacy" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="710" y="190" width="140" height="100" as="geometry" />
         </mxCell>
 
@@ -155,7 +155,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_return_lbl" value="5. Return Optimized WebP Image Stream (HTTP 200 OK — 45% Smaller — 60ms)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=1;fontColor=#0f172a;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_return">
+        <mxCell id="e_return_lbl" value="5. Return Optimized WebP Image Stream (HTTP 200 OK — 58.98% Smaller — &lt;25ms Compute)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=1;fontColor=#0f172a;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_return">
           <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 

@@ -1,0 +1,34 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://127.0.0.1:8080
+
+functions:
+  image-processor-app:
+    lang: python3-http
+    handler: ./function/image-processor-app
+    image: docker.io/qadeer016/image-processor-app:latest
+    secrets:
+      - minio-creds
+    environment:
+      MINIO_ENDPOINT: "minio-service.minio.svc.cluster.local:9000"
+      MINIO_SECURE: "false"
+      write_debug: "true"
+      read_timeout: "10s"
+      write_timeout: "10s"
+      exec_timeout: "10s"
+    labels:
+      com.openfaas.scale.min: "1"
+      com.openfaas.scale.max: "5"
+      com.openfaas.scale.factor: "20"
+    annotations:
+      com.openfaas.profile: "finops-optimized"
+      pipeline.tier: "production-serverless"
+      security.hardening: "read-only-rootfs-least-privilege"
+      pipeline.domain: "finops-image-processing"
+    limits:
+      memory: 256Mi
+      cpu: 4000m
+    requests:
+      memory: 64Mi
+      cpu: 200m

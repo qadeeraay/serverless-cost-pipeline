@@ -1,0 +1,165 @@
+<mxfile host="app.diagrams.net" modified="2026-08-22T10:11:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
+  <diagram id="simple_dfd" name="Data Flow Diagram (Sync &amp; Async)">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="650" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ========================================================================= -->
+        <!-- HEADER                                                                    -->
+        <!-- ========================================================================= -->
+        <mxCell id="title" value="DATA FLOW DIAGRAM (DFD) — SYNCHRONOUS &amp; ASYNCHRONOUS PIPELINE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f172a;strokeColor=#1e293b;fontColor=#ffffff;fontSize=14;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="25" width="1020" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- 1. SOURCE ENTITY: CLIENT                                                  -->
+        <!-- ========================================================================= -->
+        <mxCell id="client" value="&lt;font size='3'&gt;&lt;b&gt;Client&lt;/b&gt;&lt;/font&gt;&lt;br&gt;(User / App / CLI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="190" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- ASYNC QUEUE PATH: NATS JETSTREAM                                          -->
+        <!-- ========================================================================= -->
+        <mxCell id="nats_queue" value="&lt;b&gt;NATS JetStream Queue&lt;/b&gt;&lt;br&gt;(:4222 Message Bus)&lt;br&gt;&lt;font color='#92400e'&gt;Async Decoupled Buffer&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;strokeWidth=2;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="270" y="85" width="170" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- 2. PROCESS 1: VALIDATE                                                    -->
+        <!-- ========================================================================= -->
+        <mxCell id="p1" value="&lt;b&gt;1. Validate&lt;/b&gt;&lt;br&gt;Check Magic Bytes&lt;br&gt;&amp; File Size" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#ef4444;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="285" y="190" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- 3. PROCESS 2: CHECK CACHE                                                 -->
+        <!-- ========================================================================= -->
+        <mxCell id="p2" value="&lt;b&gt;2. Check Cache&lt;/b&gt;&lt;br&gt;SHA-256 Hash Match?" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d1fae5;strokeColor=#10b981;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="190" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- DATA STORE: RAM CACHE -->
+        <mxCell id="ds_ram" value="&lt;b&gt;RAM Micro-Cache&lt;/b&gt;&lt;br&gt;(SHA-256 Key Store)" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#10b981;strokeWidth=2;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="490" y="340" width="160" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- 4. PROCESS 3: TRANSCODE                                                   -->
+        <!-- ========================================================================= -->
+        <mxCell id="p3" value="&lt;b&gt;3. Transcode&lt;/b&gt;&lt;br&gt;Convert to WebP&lt;br&gt;&amp; Strip EXIF" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="710" y="190" width="140" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- 5. DESTINATION DATA STORE: MINIO S3                                       -->
+        <!-- ========================================================================= -->
+        <mxCell id="ds_s3" value="&lt;b&gt;MinIO S3 Storage&lt;/b&gt;&lt;br&gt;('uploads/' &amp; 'processed/')" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=11;align=center;" vertex="1" parent="1">
+          <mxGeometry x="910" y="210" width="150" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ========================================================================= -->
+        <!-- CONNECTORS & FLOWS                                                        -->
+        <!-- ========================================================================= -->
+
+        <!-- Path 1A: Sync Upload -> Validate -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2.5;" edge="1" source="client" target="p1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_lbl" value="1A. Sync Upload" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#1e40af;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e1">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Path 1B: Async Upload -> NATS -->
+        <mxCell id="e_async" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f59e0b;strokeWidth=2.5;" edge="1" source="client" target="nats_queue" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="117" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_async_lbl" value="1B. Async Upload (--async)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9.5;fontStyle=1;fontColor=#92400e;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_async">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Path 1C: NATS -> Return HTTP 202 to Client -->
+        <mxCell id="e_202" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f59e0b;strokeWidth=2;dashed=1;" edge="1" source="nats_queue" target="client" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="355" y="160" />
+              <mxPoint x="160" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_202_lbl" value="HTTP 202 Accepted (52.9ms)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9.5;fontStyle=1;fontColor=#92400e;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_202">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Path 1D: NATS -> Queue Worker -> Validate -->
+        <mxCell id="e_worker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f59e0b;strokeWidth=2;" edge="1" source="nats_queue" target="p1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_worker_lbl" value="Queue Worker" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#92400e;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_worker">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Flow 2: Validate -> Check Cache -->
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2.5;" edge="1" source="p1" target="p2" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_lbl" value="2. Valid Image" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#065f46;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Flow 3: Cache Miss -> Transcode -->
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#22c55e;strokeWidth=2.5;" edge="1" source="p2" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_lbl" value="3. Cache Miss (New)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#15803d;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Flow 4: Transcode -> Save to S3 -->
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=2.5;" edge="1" source="p3" target="ds_s3" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_lbl" value="4. Save WebP" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#92400e;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e4">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Cache store bidirectional link -->
+        <mxCell id="e_cache" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=1.5;dashed=1;" edge="1" source="p2" target="ds_ram" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Fast Path Flow: RAM Cache -> Client -->
+        <mxCell id="e_fast" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;dashed=1;" edge="1" source="ds_ram" target="client" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="570" y="420" />
+              <mxPoint x="140" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_fast_lbl" value="Fast Path: Cache Hit (Instant 1.2ms — $0 CPU)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#065f46;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_fast">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <!-- Return Flow: Transcoder/S3 back to Client -->
+        <mxCell id="e_return" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=2.5;" edge="1" source="p3" target="client" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="470" />
+              <mxPoint x="90" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_return_lbl" value="5. Return Optimized WebP Image Stream (HTTP 200 OK — 45% Smaller — 60ms)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=1;fontColor=#0f172a;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_return">
+          <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,135 @@
+# 🛰️ NATS JetStream Broker — Real Deployment (previously only described in diagrams)
+#
+# This closes the gap flagged in review: the architecture diagrams referenced
+# NATS JetStream for event decoupling and DLQ handling, but no broker was
+# actually deployed. This manifest deploys a real single-node JetStream
+# instance suitable for the local kind cluster demo, with persistent storage
+# for the WAL (write-ahead log) so messages survive pod restarts.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nats
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-config
+  namespace: nats
+data:
+  nats.conf: |
+    port: 4222
+    http_port: 8222
+
+    jetstream {
+      store_dir: /data/jetstream
+      max_mem: 256Mi
+      max_file: 1Gi
+    }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats
+  namespace: nats
+spec:
+  serviceName: nats
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats
+        image: nats:2.10-alpine
+        args: ["-c", "/etc/nats-config/nats.conf"]
+        ports:
+        - containerPort: 4222
+          name: client
+        - containerPort: 8222
+          name: monitor
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/nats-config
+        - name: nats-storage
+          mountPath: /data/jetstream
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8222
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: nats-config
+  volumeClaimTemplates:
+  - metadata:
+      name: nats-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: nats
+spec:
+  selector:
+    app: nats
+  ports:
+  - name: client
+    port: 4222
+    targetPort: 4222
+  - name: monitor
+    port: 8222
+    targetPort: 8222
+---
+# One-shot Job that creates the durable JetStream stream + a dead-letter
+# consumer once NATS is up. This is what the README's "S3-EVENTS" stream and
+# "dlq-poison-messages" queue actually correspond to at runtime.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nats-stream-bootstrap
+  namespace: nats
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: nats-box
+        image: natsio/nats-box:0.14.3
+        command:
+        - sh
+        - -c
+        - |
+          until nats --server nats://nats.nats.svc.cluster.local:4222 stream info S3-EVENTS >/dev/null 2>&1; do
+            echo "Creating S3-EVENTS stream..."
+            nats --server nats://nats.nats.svc.cluster.local:4222 stream add S3-EVENTS \
+              --subjects "s3.events.>" \
+              --storage file \
+              --retention limits \
+              --max-msgs=-1 \
+              --max-bytes=-1 \
+              --max-age=168h \
+              --max-msg-size=-1 \
+              --dupe-window=2m \
+              --replicas=1 \
+              --defaults && break
+            sleep 3
+          done
+          nats --server nats://nats.nats.svc.cluster.local:4222 stream add DLQ-POISON \
+            --subjects "s3.events.dlq" \
+            --storage file \
+            --retention limits \
+            --max-age=720h \
+            --defaults || true
+          echo "JetStream streams ready."

@@ -1,0 +1,23 @@
+
+*$py.class
+build/
+# Build & Packaging
+dist/
+.DS_Store
+# Dynamic Test Outputs & Temporary Artifacts
+*.egg-info/
+.idea/
+image_processing/processed_output/*.webp
+*.log
+# OS & Editor Specific
+*.pptx
+Presentation.pptx
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Python Bytecode & Cache
+.secrets/
+infrastructure/credentials-velero
+Thumbs.db
+.tox/
+.vscode/

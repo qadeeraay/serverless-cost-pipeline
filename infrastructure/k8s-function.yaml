@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-processor-app
+  namespace: openfaas-fn
+  labels:
+    faas_function: image-processor-app
+    app: image-processor-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      faas_function: image-processor-app
+  template:
+    metadata:
+      labels:
+        faas_function: image-processor-app
+        app: image-processor-app
+      annotations:
+        prometheus.io.scrape: "true"
+        prometheus.io.port: "8080"
+        prometheus.io.path: "/metrics"
+        security.defense: "read-only-rootfs-network-isolated"
+    spec:
+      terminationGracePeriodSeconds: 1
+      # 🚀 Performance: Storage Proximity Pod Affinity (Minimizes Inter-Node Latency)
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - minio
+              topologyKey: "kubernetes.io/hostname"
+      # 🛡️ DevSecOps Container Hardening: Non-Root Execution & Seccomp
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: image-processor-app
+        image: docker.io/qadeer016/image-processor-app:latest
+        imagePullPolicy: IfNotPresent
+        # 🔒 Hardened Security Context: Read-Only Root Filesystem & Dropped Capabilities
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+        env:
+        - name: fprocess
+          value: "python3 index.py"
+        - name: mode
+          value: "http"
+        - name: upstream_url
+          value: "http://127.0.0.1:5000"
+        - name: PYTHONPATH
+          value: "/home/app/.local/lib/python3.12/site-packages:/home/app"
+        - name: PYTHONPYCACHEPREFIX
+          value: "/tmp/__pycache__"
+        - name: read_timeout
+          value: "10s"
+        - name: write_timeout
+          value: "10s"
+        - name: exec_timeout
+          value: "10s"
+        - name: MINIO_ENDPOINT
+          value: "minio-service.minio.svc.cluster.local:9000"
+        # 🛡️ Credential Injection via Kubernetes Secret
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-creds
+              key: MINIO_ACCESS_KEY
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: minio-creds
+              key: MINIO_SECRET_KEY
+        - name: MINIO_SECURE
+          value: "false"
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "200m"
+          limits:
+            memory: "256Mi"
+            cpu: "4000m"
+        # 💾 In-Memory RAM Scratch Space (Physical disk writes completely blocked)
+        volumeMounts:
+        - name: temp-scratch
+          mountPath: /tmp
+        - name: handler-code
+          mountPath: /home/app/function/handler.py
+          subPath: handler.py
+      volumes:
+      - name: temp-scratch
+        emptyDir:
+          medium: Memory
+          sizeLimit: 32Mi
+      - name: handler-code
+        configMap:
+          name: function-handler-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-processor-app
+  namespace: openfaas-fn
+  labels:
+    faas_function: image-processor-app
+spec:
+  type: ClusterIP
+  selector:
+    faas_function: image-processor-app
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080

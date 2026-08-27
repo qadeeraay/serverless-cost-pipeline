@@ -1,0 +1,17 @@
+{
+  "critical": {
+    "identity": {
+      "docker-reference": "docker.io/qadeer016/image-processor-app:latest"
+    },
+    "image": {
+      "docker-manifest-digest": "sha256:84c13ba729d546fb73e99054a4a8819f19351d0bfc14dd3ccf1b86ad69cc57d8"
+    },
+    "type": "cosign container image signature"
+  },
+  "optional": {
+    "maintainer": "Qadeer Aslam (qadeer016)",
+    "specification": "Zero-Trust Container Supply-Chain Specification",
+    "signed_at": "2026-08-28T01:25:47Z",
+    "security_tier": "Enterprise Production Hardened"
+  }
+}

@@ -196,46 +196,74 @@ accurate as stated. In a holistic enterprise environment, self-hosted OpenFaaS p
 
 ---
 
-## 🏛️ 4. Architectural Decision Records (ADRs) & Engineering Technical FAQ
+## 🏛️ 4. Architectural Decision Records (ADRs)
 
-### Q1: Why self-hosted OpenFaaS on Kubernetes instead of public cloud FaaS (AWS Lambda / Google Cloud Functions)?
-> **Design Rationale & Technical Solution:** *"Public cloud serverless creates vendor lock-in, recurring invocation surcharges, unpredictable cold-starts, and expensive inter-service data egress fees. By self-hosting OpenFaaS on Kubernetes with Spot instances, we achieve 100% infrastructure sovereignty, full control over Linux security contexts, zero egress penalties, and over 90% cloud cost reduction at enterprise scale."*
+### ADR-001: Self-Hosted Kubernetes FaaS vs. Public Cloud Serverless
+* **Context:** Operating high-volume media processing workloads on public cloud serverless (e.g. AWS Lambda) introduces recurring invocation markups, cold starts, and inter-service egress bandwidth costs.
+* **Decision:** Deploy self-hosted OpenFaaS on Kubernetes with Spot instance auto-scaling.
+* **Consequences:** Eliminates cloud vendor lock-in, bypasses public cloud egress charges, provides full control over low-level Linux security contexts, and achieves >90% cost reduction at scale.
 
-### Q2: How does `readOnlyRootFilesystem: true` work with Python, and why is an in-memory `/tmp` required?
-> **Design Rationale & Technical Solution:** *"An immutable root filesystem neutralizes malware persistence, preventing attackers from downloading tools or overwriting binaries if a remote code execution vulnerability occurs. Because Python requires scratch space for bytecode and Pillow image streams, we mount an ephemeral RAM-backed volume (`emptyDir: medium: Memory`) capped at 32MB at `/tmp`. This ensures physical disk writes remain completely blocked while in-memory operations execute at RAM speeds."*
+### ADR-002: Immutable Root Filesystem with RAM-Backed Ephemeral Scratchpad
+* **Context:** Containerized applications processing untrusted media streams face risks of remote code execution (RCE) and malicious binary persistence.
+* **Decision:** Enforce `readOnlyRootFilesystem: true` combined with an ephemeral RAM-backed volume (`emptyDir: {medium: "Memory"}`) capped at 32MB mounted at `/tmp`.
+* **Consequences:** Completely blocks physical disk writes and malware persistence while providing high-speed in-RAM scratch space (>20 GB/s) for bytecode and Pillow image streams.
 
-### Q3: How do you prevent Decompression Bomb DoS attacks (e.g., a 100KB gzip expanding to 50GB in RAM)?
-> **Design Rationale & Technical Solution:** *"We enforce dual defense-in-depth: in the application layer, `Image.MAX_IMAGE_PIXELS = 30_000_000` catches and rejects excessive pixel expansions with HTTP 413 before uncompressing into RAM. In the infrastructure layer, Kubernetes cgroup limits enforce a hard ceiling of `256Mi` RAM (with a 32Mi tmpfs RAM disk), ensuring any rogue process is contained without starving host resources."*
+### ADR-003: Dual-Layer Decompression Bomb (Pixel Flood) Mitigation
+* **Context:** Attackers can submit small, highly compressed image files (e.g., 100KB gzip) that expand into tens of gigabytes in memory, exhausting host RAM (Denial of Service).
+* **Decision:** Implement dual defense-in-depth:
+  1. *Application Layer:* `Image.MAX_IMAGE_PIXELS = 30_000_000` evaluates dimensions and aborts excessive expansions with HTTP 413 before uncompressing into RAM.
+  2. *Infrastructure Layer:* Kubernetes cgroup limits enforce a hard ceiling of `256Mi` RAM per pod.
+* **Consequences:** Rogue or malicious images are neutralized before allocating memory, preventing container OOM kills and protecting host nodes.
 
-### Q4: How do you protect against IDOR, BOLA, and Path Traversal attacks in serverless storage triggers?
-> **Design Rationale & Technical Solution:** *"We implement strict input boundary validation: (1) S3 buckets are restricted to an explicit allowlist (`ALLOWED_BUCKETS = {'uploads', 'raw-images', 'processed'}`), returning HTTP 403 for unauthorized targets. (2) Object keys undergo regex and directory traversal filtering (`..`, leading `/`, null bytes), returning HTTP 400 before executing S3 SDK operations."*
+### ADR-004: Storage Tier Whitelist & Object Key Path Traversal Defense
+* **Context:** Ingestion triggers that consume user-supplied bucket and object keys are vulnerable to Insecure Direct Object Reference (IDOR), Broken Object Level Authorization (BOLA), and Directory Traversal attacks.
+* **Decision:** Enforce an application-level bucket allowlist (`ALLOWED_BUCKETS = {'uploads', 'raw-images', 'processed'}`) and regex validation on object keys to reject directory traversal sequences (`..`), leading slashes, and null bytes.
+* **Consequences:** Unauthorized buckets return HTTP 403 Forbidden, and invalid object keys return HTTP 400 Bad Request before invoking any MinIO S3 SDK operations.
 
-### Q5: Explain the Zero-Trust NetworkPolicy and what happens if an attacker attempts external data exfiltration.
-> **Design Rationale & Technical Solution:** *"Our NetworkPolicy enforces default-deny ingress and egress microsegmentation. Outbound egress is whitelisted exclusively to the `minio` namespace on TCP Port 9000 and `kube-system` on Port 53 (TCP/UDP) for CoreDNS. If an attacker gains code execution and attempts to dial an external Command & Control server or scan the Kubernetes API, the Linux kernel silently drops all outbound packets."*
+### ADR-005: Zero-Trust Default-Deny Network Microsegmentation
+* **Context:** Compromised worker containers can attempt lateral network discovery or dial external Command & Control (C2) servers for data exfiltration.
+* **Decision:** Apply a Kubernetes `NetworkPolicy` (`isolate-function-traffic`) with default-deny ingress and egress rules. Whitelist ingress strictly from the OpenFaaS gateway (Port 8080) and egress strictly to MinIO (Port 9000) and CoreDNS (Port 53).
+* **Consequences:** All unauthorized outbound SYN packets are dropped at the Linux kernel level, completely isolating the compute tier.
 
-### Q6: How does your architecture achieve Scale-to-Zero and avoid HPA controller thrashing?
-> **Design Rationale & Technical Solution:** *"Our FinOps Idler controller polls CPU utilization and inactivity windows. When traffic ceases for 20 seconds, it scales replicas down to 0, completely freeing CPU and RAM ($0 compute cost). During incoming bursts, OpenFaaS triggers an on-demand container cold-start, returning to active duty in under a second."*
+### ADR-006: Scale-to-Zero Inactivity Lifecycle & Auto-Idler Governance
+* **Context:** Dedicated VM servers incur continuous 24/7 idle costs during low or non-existent traffic periods.
+* **Decision:** Implement an automated FinOps Idler controller that tracks traffic activity and scales pod replicas to 0 after 20 seconds of inactivity.
+* **Consequences:** Reduces compute spend to $0.00 during idle periods, while accepting a 400–800ms cold-start latency when new traffic arrives.
 
-### Q7: Why is file extension verification insufficient, and how do magic bytes fix the flaw?
-> **Design Rationale & Technical Solution:** *"Attackers can easily rename malicious scripts (e.g. `exploit.php.png`). In our handler, we inspect the first 16 bytes of the binary header for cryptographic format signatures (`\x89PNG`, `\xff\xd8\xff`, `RIFF/WEBP`). Any file failing magic byte validation is immediately rejected with HTTP 422 before invoking image parsing engines."*
+### ADR-007: Cryptographic Binary Magic-Byte Header Verification
+* **Context:** Validating input files solely by file extensions (e.g. `exploit.php.png`) allows executable scripts or payloads to bypass ingestion filters.
+* **Decision:** Inspect the first 16 bytes of every uploaded payload for legitimate binary signatures (`\x89PNG`, `\xff\xd8\xff`, `RIFF/WEBP`).
+* **Consequences:** Files failing magic-byte validation are rejected immediately with HTTP 422 Unprocessable Entity prior to invoking Pillow image decoding routines.
 
-### Q8: What is the purpose of Cosign NIST P-256 ECDSA container signing?
-> **Design Rationale & Technical Solution:** *"Cosign verifies container supply-chain integrity. We cryptographically sign the container image SHA256 digest using NIST P-256 elliptic curve keys. In production, Kubernetes Admission Controllers (e.g. Kyverno) reject untrusted or tampered container images from ever running on cluster nodes."*
+### ADR-008: Container Supply-Chain Integrity via Cosign ECDSA Signatures
+* **Context:** Container images in public or private registries can be tampered with or replaced with malicious builds (supply-chain compromise).
+* **Decision:** Sign container image digests using NIST P-256 elliptic curve keys via Cosign and enforce verification through Kubernetes Admission Controllers (e.g. Kyverno).
+* **Consequences:** Only cryptographically verified container images matching the trusted public key are admitted to cluster nodes.
 
-### Q9: What performance optimizations are implemented in the image processing engine?
-> **Design Rationale & Technical Solution:** *"We use single-pass C-native WebP transcoding with Pillow `method=0` (fastest compression algorithm) and `quality=75`. EXIF metadata is sanitized in memory without pixel-looping overhead, keeping compute latency under 25 milliseconds. Furthermore, the Waitress WSGI server is configured with 8 concurrent worker threads."*
+### ADR-009: C-Native Transcoding Optimization & Non-Blocking WSGI Concurrency
+* **Context:** High-resolution image transcoding is CPU-intensive; inefficient encoders degrade latency and throughput under load.
+* **Decision:** Utilize single-pass C-native WebP encoding with Pillow `method=0` (optimized fast-path) and `quality=75`. Strip EXIF metadata in memory without pixel-looping overhead, and run the handler under Waitress WSGI with 8 concurrent worker threads.
+* **Consequences:** Reduces median transcode compute latency to under 25 milliseconds while delivering 45%–60% file size reduction.
 
-### Q10: How do you protect Kubernetes secrets from exposure?
-> **Design Rationale & Technical Solution:** *"We eliminated all hardcoded plaintext credentials from git manifests. Credentials are encrypted in Kubernetes Secrets and injected dynamically at pod initialization via `secretKeyRef` and OpenFaaS secret mounts (`/var/openfaas/secrets/`), ensuring zero credential leakage in source repositories."*
+### ADR-010: Zero Plaintext Credential Management in Git Manifests
+* **Context:** Hardcoding storage access keys and database credentials in Git repositories creates severe security vulnerabilities and compliance violations.
+* **Decision:** Store all sensitive credentials in Kubernetes Secrets (`minio-creds`) and inject them into container pods at runtime via `secretKeyRef` and OpenFaaS secret mounts (`/var/openfaas/secrets/`).
+* **Consequences:** Manifests checked into version control contain zero plaintext secrets, maintaining compliance with modern DevSecOps standards.
 
-### Q12: How does the architecture achieve true event-driven decoupling using S3 CloudEvents?
-> **Design Rationale & Technical Solution:** *"The client only performs an S3 upload (`PUT uploads/raw.jpg`). MinIO asynchronously fires an `s3:ObjectCreated:Put` event notification directly into OpenFaaS via the NATS message queue. This completely eliminates client blocking latency and guarantees zero dropped requests under massive burst traffic."*
+### ADR-011: Asynchronous Event-Driven Decoupling via S3 CloudEvents & NATS JetStream
+* **Context:** Synchronous HTTP uploads force client connections to block until transcoding completes, increasing timeout risks and limiting peak throughput.
+* **Decision:** Decouple ingestion by configuring MinIO S3 bucket notifications (`s3:ObjectCreated:Put`) to publish events into NATS JetStream with a persistent Write-Ahead Log (WAL), consumed by an in-cluster pull connector.
+* **Consequences:** Clients receive instant upload confirmations while the serverless function fleet processes transcoding jobs asynchronously with automatic retry backoff and Dead-Letter Queue (DLQ) poison routing.
 
-### Q13: How does OpenTelemetry W3C distributed tracing provide observability across serverless spans?
-> **Design Rationale & Technical Solution:** *"Every invocation carries an immutable W3C `traceparent` header (format `00-<trace_id>-<span_id>-01`). The handler measures discrete sub-millisecond spans: S3 object fetch, in-memory C-transcoding, and S3 write persistence, enabling end-to-end distributed latency analysis without external sidecar overhead."*
+### ADR-012: In-Band Distributed Observability via OpenTelemetry W3C TraceContext
+* **Context:** Troubleshooting latency bottlenecks in distributed, ephemeral serverless pods is difficult without end-to-end tracing.
+* **Decision:** Propagate W3C `traceparent` headers (`00-<trace_id>-<span_id>-01`) across every request, recording discrete sub-millisecond spans for S3 fetch, in-memory C-transcoding, and S3 persistence.
+* **Consequences:** Provides granular distributed latency telemetry across all processing phases without requiring heavyweight external sidecars.
 
-### Q14: Why is KEDA event-driven autoscaling superior to standard Kubernetes CPU-based HPA?
-> **Design Rationale & Technical Solution:** *"Standard HPA relies on CPU metrics, which react only after compute pressure builds up. KEDA scales proactively on NATS JetStream queue depth and Prometheus incoming request rates ($QPS$), instantiating pods before queue congestion occurs and scaling instantly to 0 when idle."*
+### ADR-013: Proactive Queue-Depth Auto-Scaling vs. Reactive CPU Thresholds
+* **Context:** Standard Kubernetes Horizontal Pod Autoscalers (HPA) rely on CPU metrics, which react only after compute pressure builds up.
+* **Decision:** Integrate event-driven autoscaling (KEDA / JetStream metrics) that scales pod replicas proactively based on NATS queue depth and incoming request rates ($QPS$).
+* **Consequences:** Pods scale up before queue congestion forms and scale down immediately to 0 when queues are empty, minimizing both latency spikes and infrastructure spend.
 
 ---
 

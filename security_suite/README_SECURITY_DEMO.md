@@ -18,23 +18,21 @@ This directory contains all security configurations, scripts, and cryptographic 
 
 ---
 
-## 🚀 How to Run the Security Demo in 2 Commands:
+## 🚀 How to Run the Security Suite:
 
 ```bash
-# 1. Run the Complete 10/10 DevSecOps Security Audit:
-python3 /home/qadeer/serverless-cost-pipeline/security_suite/1_run_security_audit.py
-```
+# 1. Run the Complete DevSecOps Security Audit:
+python3 security_suite/1_run_security_audit.py
 
-```bash
 # 2. Run the Cosign Cryptographic Signature Verification:
-python3 /home/qadeer/serverless-cost-pipeline/security_suite/2_verify_cosign_signature.py
+python3 security_suite/2_verify_cosign_signature.py
 ```
 
 ---
 
-## 🎯 Key Security Architecture Highlights:
+## 🛡️ Core Security Architecture Controls
 
-1. **Network Security:** *"We enforce Zero-Trust micro-segmentation using a Kubernetes `NetworkPolicy`. Egress is blocked by default, allowing connections strictly to MinIO (Port 9000) and CoreDNS (Port 53)."*
-2. **Host & Container Hardening:** *"The container operates with `readOnlyRootFilesystem: true`, non-root user UID 1000, and all Linux kernel capabilities dropped (`drop: ALL`). Scratch space is restricted to a 32MB in-memory RAM volume."*
-3. **Application Layer:** *"The function inspects binary magic bytes (`\x89PNG`, `\xff\xd8`) to prevent script injection and enforces `MAX_IMAGE_PIXELS = 30M` to neutralize Decompression Bomb DoS attacks."*
-4. **Supply-Chain Integrity:** *"Every container artifact built for `docker.io/qadeer016/image-processor-app` is digitally signed using ECDSA NIST P-256 keys via Cosign."*
+* **Zero-Trust Microsegmentation:** Enforces default-deny ingress and egress via Kubernetes `NetworkPolicy`. Egress is restricted strictly to MinIO (Port 9000) and CoreDNS (Port 53), preventing lateral movement and external data exfiltration.
+* **Host & Runtime Hardening:** Enforces `readOnlyRootFilesystem: true`, non-root execution (`runAsUser: 1000`), and drops all Linux kernel capabilities (`drop: ["ALL"]`). Scratch space is isolated to an in-memory 32MB tmpfs RAM disk.
+* **Application-Layer Input Validation:** Inspects 16-byte binary magic headers (`\x89PNG`, `\xff\xd8`, `RIFF/WEBP`) to reject disguised scripts (HTTP 422), enforces a 30-Megapixel ceiling to neutralize Decompression Bomb DoS attacks (HTTP 413), and sanitizes EXIF privacy metadata in-flight.
+* **Cryptographic Supply-Chain Integrity:** Verifies container image digest authenticity using Cosign ECDSA NIST P-256 signatures before cluster admission.

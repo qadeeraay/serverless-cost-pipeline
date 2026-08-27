@@ -10,8 +10,7 @@ dist/
 image_processing/processed_output/*.webp
 *.log
 # OS & Editor Specific
-*.pptx
-Presentation.pptx
+
 __pycache__/
 *.py[cod]
 .pytest_cache/

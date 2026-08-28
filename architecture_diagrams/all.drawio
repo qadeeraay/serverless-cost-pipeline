@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2026-08-22T09:32:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
+<mxfile host="app.diagrams.net" modified="2026-08-28T06:33:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
   <!-- ========================================================================= -->
   <!-- TAB 1: SYSTEM ARCHITECTURE DIAGRAM                                        -->
   <!-- ========================================================================= -->
@@ -39,12 +39,12 @@
         </mxCell>
 
         <!-- INGRESS & GATEWAY -->
-        <mxCell id="gwb" value="&lt;b&gt;OpenFaaS Ingress Gateway (:8080)&lt;/b&gt;&lt;br&gt;• Basic-Auth &amp; JWT Verification&lt;br&gt;• Ingress Rate-Limiting &amp; Routing&lt;br&gt;• Cold Start &amp; Auto-Idler Coordinator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=10.5;strokeWidth=2;" vertex="1" parent="k8s_c">
+        <mxCell id="gwb" value="&lt;b&gt;OpenFaaS Ingress Gateway (:8080)&lt;/b&gt;&lt;br&gt;• Namespace: openfaas&lt;br&gt;• Basic-Auth &amp; JWT Verification&lt;br&gt;• Ingress Rate-Limiting &amp; Routing&lt;br&gt;• Cold Start &amp; Auto-Idler Coordinator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=10;strokeWidth=2;" vertex="1" parent="k8s_c">
           <mxGeometry x="30" y="40" width="220" height="90" as="geometry" />
         </mxCell>
 
         <!-- ASYNC NATS QUEUE BROKER -->
-        <mxCell id="natsb" value="&lt;b&gt;NATS JetStream Broker (:4222)&lt;/b&gt;&lt;br&gt;• In-Memory Message Bus (STAN)&lt;br&gt;• Returns HTTP 202 in 52.9ms&lt;br&gt;• Decouples Client Network Sockets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;fontSize=10.5;strokeWidth=2;" vertex="1" parent="k8s_c">
+        <mxCell id="natsb" value="&lt;b&gt;NATS JetStream Broker (:4222)&lt;/b&gt;&lt;br&gt;• Namespace: nats (WAL Storage)&lt;br&gt;• Returns HTTP 202 in 52.9ms&lt;br&gt;• Decouples Client Network Sockets&lt;br&gt;• Streams: S3-EVENTS | DLQ-POISON" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;fontSize=9.5;strokeWidth=2;" vertex="1" parent="k8s_c">
           <mxGeometry x="310" y="40" width="220" height="90" as="geometry" />
         </mxCell>
 
@@ -82,8 +82,8 @@
         <mxCell id="sg" value="STORAGE &amp; OBSERVABILITY TIER" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontColor=#0f172a;fontSize=11;fontStyle=1;" vertex="1" parent="k8s_c">
           <mxGeometry x="560" y="160" width="250" height="340" as="geometry" />
         </mxCell>
-        <mxCell id="ms3" value="&lt;b&gt;MinIO S3 Object Storage (:9000)&lt;/b&gt;&lt;br&gt;• Bucket 'uploads/' (Raw Images)&lt;br&gt;• Bucket 'processed/' (WebP)&lt;br&gt;• Zero Public Cloud Egress Fees ($0)&lt;br&gt;• Persistent Local Volume (PV/PVC)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=9.5;" vertex="1" parent="sg">
-          <mxGeometry x="15" y="40" width="220" height="80" as="geometry" />
+        <mxCell id="ms3" value="&lt;b&gt;MinIO S3 Object Storage (:9000)&lt;/b&gt;&lt;br&gt;• Namespace: minio&lt;br&gt;• Bucket 'uploads/' (Raw Images)&lt;br&gt;• Bucket 'processed/' (WebP)&lt;br&gt;• Zero Public Cloud Egress Fees ($0)&lt;br&gt;• Persistent Local Volume (PV/PVC)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#d97706;fontSize=9.5;" vertex="1" parent="sg">
+          <mxGeometry x="15" y="40" width="220" height="85" as="geometry" />
         </mxCell>
         <mxCell id="otb" value="&lt;b&gt;OpenTelemetry W3C Tracing&lt;/b&gt;&lt;br&gt;• Injects traceparent (00-...-01)&lt;br&gt;• Discrete Sub-ms Spans:&lt;br&gt;  - S3 Fetch (2.57ms)&lt;br&gt;  - C-Libwebp Transcode (1.20ms)&lt;br&gt;  - S3 Persist (1.03ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#8b5cf6;fontSize=9.5;align=left;" vertex="1" parent="sg">
           <mxGeometry x="15" y="130" width="220" height="95" as="geometry" />
@@ -143,27 +143,27 @@
           <mxGeometry x="340" y="90" width="790" height="660" as="geometry" />
         </mxCell>
 
-        <!-- NS: openfaas -->
-        <mxCell id="t2_nso" value="NAMESPACE: openfaas (Control Plane &amp; Message Queue Infrastructure)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontColor=#065f46;fontSize=11;fontStyle=1;" vertex="1" parent="t2_kn">
+        <!-- NS: openfaas & nats -->
+        <mxCell id="t2_nso" value="NAMESPACES: openfaas &amp; nats (Control Plane &amp; Message Queue Infrastructure)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontColor=#065f46;fontSize=11;fontStyle=1;" vertex="1" parent="t2_kn">
           <mxGeometry x="30" y="40" width="730" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="t2_sgw" value="&lt;b&gt;Service: gateway&lt;/b&gt;&lt;br&gt;IP: 10.96.0.45 | Port: 8080/TCP&lt;br&gt;Routes synchronous function calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="t2_nso"><mxGeometry x="20" y="45" width="200" height="65" as="geometry" /></mxCell>
-        <mxCell id="t2_snats" value="&lt;b&gt;Service: nats (STAN)&lt;/b&gt;&lt;br&gt;IP: 10.96.0.82 | Port: 4222/TCP&lt;br&gt;In-memory event queue broker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="t2_nso"><mxGeometry x="255" y="45" width="210" height="65" as="geometry" /></mxCell>
-        <mxCell id="t2_sworker" value="&lt;b&gt;Pod: queue-worker&lt;/b&gt;&lt;br&gt;IP: 10.244.0.12&lt;br&gt;Consumes NATS messages &amp; dispatches" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="t2_nso"><mxGeometry x="500" y="45" width="200" height="65" as="geometry" /></mxCell>
+        <mxCell id="t2_sgw" value="&lt;b&gt;Service: gateway (openfaas)&lt;/b&gt;&lt;br&gt;IP: 10.96.0.45 | Port: 8080/TCP&lt;br&gt;Routes sync &amp; async function calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="t2_nso"><mxGeometry x="20" y="45" width="200" height="65" as="geometry" /></mxCell>
+        <mxCell id="t2_snats" value="&lt;b&gt;Service: nats (nats)&lt;/b&gt;&lt;br&gt;IP: 10.96.0.82 | Port: 4222/TCP&lt;br&gt;JetStream S3-EVENTS &amp; DLQ Broker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="t2_nso"><mxGeometry x="255" y="45" width="210" height="65" as="geometry" /></mxCell>
+        <mxCell id="t2_sworker" value="&lt;b&gt;Pod: nats-openfaas-connector&lt;/b&gt;&lt;br&gt;NS: openfaas-fn | IP: 10.244.0.12&lt;br&gt;Consumes NATS &amp; invokes Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontSize=10;" vertex="1" parent="t2_nso"><mxGeometry x="500" y="45" width="200" height="65" as="geometry" /></mxCell>
 
         <!-- NS: openfaas-fn -->
         <mxCell id="t2_nsf" value="NAMESPACE: openfaas-fn (Stateless Compute &amp; Zero-Trust NetworkPolicy)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#3b82f6;fontColor=#1e40af;fontSize=11;fontStyle=1;" vertex="1" parent="t2_kn">
           <mxGeometry x="30" y="210" width="730" height="230" as="geometry" />
         </mxCell>
         <mxCell id="t2_pfn" value="&lt;b&gt;Function Pod Fleet: image-processor-app (1 to 5 Replicas)&lt;/b&gt;&lt;br&gt;IPs: 10.244.0.21 - 10.244.0.25 | Port 8080/TCP | In-Memory C-Libwebp Engine (256MB RAM Hard Ceiling)&lt;br&gt;• 32MB tmpfs RAM Disk (/tmp) | UID 1000 Non-Root | OpenTelemetry W3C traceparent Propagation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#3b82f6;fontSize=9.5;align=left;" vertex="1" parent="t2_nsf"><mxGeometry x="20" y="40" width="680" height="75" as="geometry" /></mxCell>
-        <mxCell id="t2_npb" value="&lt;b&gt;ZERO-TRUST NETWORKPOLICY RULES (security_suite/network_policy_and_secrets.yaml):&lt;/b&gt;&lt;br&gt;• &lt;b&gt;Ingress Rule:&lt;/b&gt; ALLOW from namespace 'openfaas' (Gateway &amp; Queue-Worker) on Port 8080/TCP ONLY.&lt;br&gt;• &lt;b&gt;Egress Rule 1:&lt;/b&gt; ALLOW to MinIO S3 (default namespace) on Port 9000/TCP ONLY.&lt;br&gt;• &lt;b&gt;Egress Rule 2:&lt;/b&gt; ALLOW to kube-system (CoreDNS) on Port 53/UDP &amp; TCP ONLY.&lt;br&gt;• &lt;b&gt;Default Rule:&lt;/b&gt; &lt;font color='#b91c1c'&gt;&lt;b&gt;DEFAULT-DENY ALL OTHER INGRESS &amp; EGRESS (Kernel Silently Drops Outbound SYN Packets)&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#ef4444;fontColor=#0f172a;fontSize=9.5;align=left;" vertex="1" parent="t2_nsf"><mxGeometry x="20" y="125" width="680" height="90" as="geometry" /></mxCell>
+        <mxCell id="t2_npb" value="&lt;b&gt;ZERO-TRUST NETWORKPOLICY RULES (security_suite/network_policy_and_secrets.yaml):&lt;/b&gt;&lt;br&gt;• &lt;b&gt;Ingress Rule:&lt;/b&gt; ALLOW from namespace 'openfaas' (Gateway &amp; Queue-Worker) on Port 8080/TCP ONLY.&lt;br&gt;• &lt;b&gt;Egress Rule 1:&lt;/b&gt; ALLOW to MinIO S3 (namespace: 'minio') on Port 9000/TCP ONLY.&lt;br&gt;• &lt;b&gt;Egress Rule 2:&lt;/b&gt; ALLOW to kube-system (CoreDNS) on Port 53/UDP &amp; TCP ONLY.&lt;br&gt;• &lt;b&gt;Default Rule:&lt;/b&gt; &lt;font color='#b91c1c'&gt;&lt;b&gt;DEFAULT-DENY ALL OTHER INGRESS &amp; EGRESS (Kernel Silently Drops Outbound SYN Packets)&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#ef4444;fontColor=#0f172a;fontSize=9.5;align=left;" vertex="1" parent="t2_nsf"><mxGeometry x="20" y="125" width="680" height="90" as="geometry" /></mxCell>
 
-        <!-- NS: default & kube-system -->
-        <mxCell id="t2_nsd" value="NAMESPACE: default &amp; kube-system (Storage &amp; Cluster DNS)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;fontColor=#92400e;fontSize=11;fontStyle=1;" vertex="1" parent="t2_kn">
+        <!-- NS: minio & kube-system -->
+        <mxCell id="t2_nsd" value="NAMESPACE: minio &amp; kube-system (Storage &amp; Cluster DNS)" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;fontColor=#92400e;fontSize=11;fontStyle=1;" vertex="1" parent="t2_kn">
           <mxGeometry x="30" y="460" width="730" height="150" as="geometry" />
         </mxCell>
-        <mxCell id="t2_sminio" value="&lt;b&gt;Service: minio&lt;/b&gt;&lt;br&gt;IP: 10.96.0.150 | Port: 9000/TCP (S3 API)&lt;br&gt;Persistent Local Bucket Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef9c3;strokeColor=#f59e0b;fontSize=10;" vertex="1" parent="t2_nsd"><mxGeometry x="40" y="45" width="280" height="75" as="geometry" /></mxCell>
-        <mxCell id="t2_sdns" value="&lt;b&gt;Service: kube-dns (CoreDNS)&lt;/b&gt;&lt;br&gt;IP: 10.96.0.10 | Port: 53/UDP &amp; TCP&lt;br&gt;Internal Cluster Domain Resolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef9c3;strokeColor=#f59e0b;fontSize=10;" vertex="1" parent="t2_nsd"><mxGeometry x="400" y="45" width="280" height="75" as="geometry" /></mxCell>
+        <mxCell id="t2_sminio" value="&lt;b&gt;Service: minio-service (minio)&lt;/b&gt;&lt;br&gt;DNS: minio-service.minio.svc.cluster.local&lt;br&gt;IP: 10.96.0.150 | Port: 9000/TCP (S3 API)&lt;br&gt;Persistent Local Bucket Storage (uploads &amp; processed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef9c3;strokeColor=#f59e0b;fontSize=9.5;" vertex="1" parent="t2_nsd"><mxGeometry x="40" y="45" width="310" height="75" as="geometry" /></mxCell>
+        <mxCell id="t2_sdns" value="&lt;b&gt;Service: kube-dns (CoreDNS)&lt;/b&gt;&lt;br&gt;IP: 10.96.0.10 | Port: 53/UDP &amp; TCP&lt;br&gt;Internal Cluster Domain Resolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef9c3;strokeColor=#f59e0b;fontSize=10;" vertex="1" parent="t2_nsd"><mxGeometry x="390" y="45" width="300" height="75" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>
@@ -192,8 +192,8 @@
         <mxCell id="t3_p5" value="&lt;b&gt;5.0 METRIC TELEMETRY SPAN&lt;/b&gt;&lt;br&gt;• OpenTelemetry W3C Injection&lt;br&gt;• Discrete Sub-ms Spans&lt;br&gt;• HPA CPU Utilization Metrics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ede9fe;strokeColor=#8b5cf6;strokeWidth=2;fontSize=10;" vertex="1" parent="1"><mxGeometry x="560" y="280" width="180" height="110" as="geometry" /></mxCell>
 
         <!-- DATA STORES -->
-        <mxCell id="t3_ds1" value="&lt;b&gt;D1: MinIO S3 Raw Bucket ('uploads/')&lt;/b&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontSize=11;" vertex="1" parent="1"><mxGeometry x="310" y="470" width="300" height="50" as="geometry" /></mxCell>
-        <mxCell id="t3_ds2" value="&lt;b&gt;D2: MinIO S3 WebP Bucket ('processed/')&lt;/b&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontSize=11;" vertex="1" parent="1"><mxGeometry x="690" y="470" width="310" height="50" as="geometry" /></mxCell>
+        <mxCell id="t3_ds1" value="&lt;b&gt;D1: MinIO S3 Raw Bucket ('uploads/' in 'minio' NS)&lt;/b&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontSize=10.5;" vertex="1" parent="1"><mxGeometry x="310" y="470" width="320" height="50" as="geometry" /></mxCell>
+        <mxCell id="t3_ds2" value="&lt;b&gt;D2: MinIO S3 WebP Bucket ('processed/' in 'minio' NS)&lt;/b&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontSize=10.5;" vertex="1" parent="1"><mxGeometry x="670" y="470" width="330" height="50" as="geometry" /></mxCell>
         <mxCell id="t3_ds3" value="&lt;b&gt;D3: In-Memory SHA-256 Cache &amp; 32MB tmpfs RAM Disk (/tmp)&lt;/b&gt;" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#64748b;strokeWidth=2;fontSize=11;" vertex="1" parent="1"><mxGeometry x="450" y="560" width="450" height="50" as="geometry" /></mxCell>
 
         <!-- CONNECTORS -->
@@ -226,9 +226,9 @@
         <mxCell id="t4_d3" value="&lt;b&gt;Pixel Grid &lt;= 30MP &amp;&lt;br&gt;Payload &lt;= 10MB?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef2f2;strokeColor=#ef4444;fontSize=10;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="500" y="410" width="170" height="100" as="geometry" /></mxCell>
         <mxCell id="t4_e413" value="&lt;b&gt;HTTP 413 Payload Too Large&lt;/b&gt;&lt;br&gt;Block Decompression Bomb DoS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#dc2626;fontColor=#991b1b;fontSize=10;" vertex="1" parent="1"><mxGeometry x="780" y="430" width="240" height="60" as="geometry" /></mxCell>
         <mxCell id="t4_d4" value="&lt;b&gt;SHA-256 ETag in&lt;br&gt;In-Memory RAM Cache?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#10b981;fontSize=10;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="495" y="540" width="180" height="100" as="geometry" /></mxCell>
-        <mxCell id="t4_hit" value="&lt;b&gt;Fast Path: In-Memory Cache Hit&lt;/b&gt;&lt;br&gt;Serve WebP directly from RAM in &lt;b&gt;1.2ms&lt;/b&gt;&lt;br&gt;Est. CPU Spend: &lt;b&gt;$0.00000000&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;fontSize=10;" vertex="1" parent="1"><mxGeometry x="780" y="560" width="240" height="60" as="geometry" /></mxCell>
-        <mxCell id="t4_proc" value="&lt;b&gt;Execute C-Libwebp Transcoding &amp; Sanitization:&lt;/b&gt;&lt;br&gt;1. Stream into in-memory io.BytesIO buffer&lt;br&gt;2. Apply C-Libwebp (quality=65, method=0) ➔ 58.98% Bandwidth Reduction&lt;br&gt;3. Strip EXIF metadata in-place (Camera, GPS, timestamps)&lt;br&gt;4. Save WebP artifact to MinIO S3 'processed/' bucket&lt;br&gt;5. Record OpenTelemetry W3C distributed traceparent headers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=10.5;align=left;" vertex="1" parent="1"><mxGeometry x="420" y="670" width="330" height="95" as="geometry" /></mxCell>
-        <mxCell id="t4_end" value="&lt;b&gt;HTTP 200 OK Response Returned&lt;/b&gt;&lt;br&gt;Telemetry JSON + WebP Binary Stream (18.5ms compute)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fillColor=#0f172a;strokeColor=#0f172a;fontColor=#38bdf8;fontSize=11;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="420" y="790" width="330" height="50" as="geometry" /></mxCell>
+        <mxCell id="t4_hit" value="&lt;b&gt;Fast Path: In-Memory Cache Hit&lt;/b&gt;&lt;br&gt;Serve WebP metadata from RAM in &lt;b&gt;1.2ms&lt;/b&gt;&lt;br&gt;Est. CPU Spend: &lt;b&gt;$0.00000000&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#16a34a;fontSize=10;" vertex="1" parent="1"><mxGeometry x="780" y="560" width="240" height="60" as="geometry" /></mxCell>
+        <mxCell id="t4_proc" value="&lt;b&gt;Execute C-Libwebp Transcoding &amp; Sanitization:&lt;/b&gt;&lt;br&gt;1. Stream into in-memory io.BytesIO buffer&lt;br&gt;2. Apply C-Libwebp (quality=65, method=0) ➔ 58.98% Bandwidth Reduction&lt;br&gt;3. Strip EXIF metadata in-place (Camera, GPS, timestamps)&lt;br&gt;4. Save WebP artifact to MinIO S3 'processed/' bucket (namespace: minio)&lt;br&gt;5. Record OpenTelemetry W3C distributed traceparent headers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fdf4;strokeColor=#22c55e;fontSize=10.5;align=left;" vertex="1" parent="1"><mxGeometry x="420" y="670" width="330" height="95" as="geometry" /></mxCell>
+        <mxCell id="t4_end" value="&lt;b&gt;HTTP 200 OK Response Returned&lt;/b&gt;&lt;br&gt;Telemetry JSON + WebP S3 Key (18.5ms compute)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fillColor=#0f172a;strokeColor=#0f172a;fontColor=#38bdf8;fontSize=11;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="420" y="790" width="330" height="50" as="geometry" /></mxCell>
 
         <!-- CONNECTORS -->
         <mxCell id="t4_c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" source="t4_start" target="t4_d1" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>

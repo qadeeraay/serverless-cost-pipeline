@@ -35,7 +35,7 @@ flowchart TB
             end
         end
 
-        subgraph StorageNS ["Storage & Disaster Recovery (Namespace: default)"]
+        subgraph StorageNS ["Storage & Disaster Recovery (Namespace: minio)"]
             MinIO["MinIO S3 Object Storage (:9000)\nBuckets: uploads | processed | velero-backups"]
             Velero["Velero Disaster Recovery\n(Automated Daily S3 Snapshot Schedule)"]
         end

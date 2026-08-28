@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2026-08-22T10:11:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
+<mxfile host="app.diagrams.net" modified="2026-08-28T06:33:00.000Z" agent="Mozilla/5.0" version="21.0.0" type="device">
   <diagram id="simple_dfd" name="Data Flow Diagram (Sync &amp; Async)">
     <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="650" background="#ffffff" math="0" shadow="0">
       <root>
@@ -22,14 +22,14 @@
         <!-- ========================================================================= -->
         <!-- ASYNC QUEUE PATH: NATS JETSTREAM                                          -->
         <!-- ========================================================================= -->
-        <mxCell id="nats_queue" value="&lt;b&gt;NATS JetStream Queue&lt;/b&gt;&lt;br&gt;(:4222 Message Bus)&lt;br&gt;&lt;font color='#92400e'&gt;Async Decoupled Buffer&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;strokeWidth=2;fontSize=11;align=center;" vertex="1" parent="1">
+        <mxCell id="nats_queue" value="&lt;b&gt;NATS JetStream Queue&lt;/b&gt;&lt;br&gt;(:4222 Message Bus in 'nats' NS)&lt;br&gt;&lt;font color='#92400e'&gt;Async Decoupled Buffer&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#f59e0b;strokeWidth=2;fontSize=11;align=center;" vertex="1" parent="1">
           <mxGeometry x="270" y="85" width="170" height="65" as="geometry" />
         </mxCell>
 
         <!-- ========================================================================= -->
         <!-- 2. PROCESS 1: VALIDATE                                                    -->
         <!-- ========================================================================= -->
-        <mxCell id="p1" value="&lt;b&gt;1. Validate&lt;/b&gt;&lt;br&gt;Check Magic Bytes&lt;br&gt;&amp; File Size" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#ef4444;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="p1" value="&lt;b&gt;1. Validate&lt;/b&gt;&lt;br&gt;Check Magic Bytes,&lt;br&gt;Payload &amp; 30MP Cap" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#ef4444;strokeWidth=2;fontSize=11;align=center;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="285" y="190" width="140" height="100" as="geometry" />
         </mxCell>
 
@@ -41,8 +41,8 @@
         </mxCell>
 
         <!-- DATA STORE: RAM CACHE -->
-        <mxCell id="ds_ram" value="&lt;b&gt;RAM Micro-Cache&lt;/b&gt;&lt;br&gt;(SHA-256 Key Store)" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#10b981;strokeWidth=2;fontSize=10;align=center;" vertex="1" parent="1">
-          <mxGeometry x="490" y="340" width="160" height="45" as="geometry" />
+        <mxCell id="ds_ram" value="&lt;b&gt;RAM Micro-Cache&lt;/b&gt;&lt;br&gt;(SHA-256 Key Store in /tmp tmpfs)" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#f8fafc;strokeColor=#10b981;strokeWidth=2;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="480" y="340" width="180" height="45" as="geometry" />
         </mxCell>
 
         <!-- ========================================================================= -->
@@ -55,8 +55,8 @@
         <!-- ========================================================================= -->
         <!-- 5. DESTINATION DATA STORE: MINIO S3                                       -->
         <!-- ========================================================================= -->
-        <mxCell id="ds_s3" value="&lt;b&gt;MinIO S3 Storage&lt;/b&gt;&lt;br&gt;('uploads/' &amp; 'processed/')" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=11;align=center;" vertex="1" parent="1">
-          <mxGeometry x="910" y="210" width="150" height="60" as="geometry" />
+        <mxCell id="ds_s3" value="&lt;b&gt;MinIO S3 Storage&lt;/b&gt;&lt;br&gt;Namespace: 'minio' (:9000)&lt;br&gt;('uploads/' &amp; 'processed/')" style="html=1;dashed=0;whiteSpace=wrap;shape=partialRectangle;right=0;left=0;fillColor=#fef3c7;strokeColor=#d97706;strokeWidth=2;fontSize=10.5;align=center;" vertex="1" parent="1">
+          <mxGeometry x="900" y="210" width="170" height="60" as="geometry" />
         </mxCell>
 
         <!-- ========================================================================= -->
@@ -67,7 +67,7 @@
         <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2563eb;strokeWidth=2.5;" edge="1" source="client" target="p1" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e1_lbl" value="1A. Sync Upload" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#1e40af;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e1">
+        <mxCell id="e1_lbl" value="1A. Sync Upload &amp; Trigger" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#1e40af;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e1">
           <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
@@ -124,7 +124,7 @@
         <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d97706;strokeWidth=2.5;" edge="1" source="p3" target="ds_s3" parent="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e4_lbl" value="4. Save WebP" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#92400e;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e4">
+        <mxCell id="e4_lbl" value="4. PUT WebP to processed/" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontStyle=1;fontColor=#92400e;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e4">
           <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
@@ -146,7 +146,7 @@
           <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Return Flow: Transcoder/S3 back to Client -->
+        <!-- Return Flow: Transcoder back to Client -->
         <mxCell id="e_return" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0f172a;strokeWidth=2.5;" edge="1" source="p3" target="client" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
@@ -155,7 +155,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_return_lbl" value="5. Return Optimized WebP Image Stream (HTTP 200 OK — 58.98% Smaller — &lt;25ms Compute)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontStyle=1;fontColor=#0f172a;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_return">
+        <mxCell id="e_return_lbl" value="5. Return HTTP 200 OK + Telemetry JSON (WebP S3 Key, 58.98% Savings, W3C TraceContext &lt;25ms)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10.5;fontStyle=1;fontColor=#0f172a;backgroundColor=#ffffff;" vertex="1" connectable="0" parent="e_return">
           <mxGeometry x="-0.1" y="2" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 

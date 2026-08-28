@@ -10,54 +10,66 @@
 
 ```mermaid
 flowchart TB
-    subgraph ClientZone ["🌐 Ingestion, Client & Testing Zone"]
-        Client["Client Applications / CLI\n(1_upload_and_process.py)"]
+    subgraph ClientZone ["🌐 Client & Ingestion Zone"]
+        Client["Client / Producer\n(1_upload_and_process.py)"]
         LoadGen["High-Concurrency Load Gen\n(2_load_test_autoscaling.py)"]
-        S3Trigger["S3 CloudEvent Generator\n(4_event_driven_s3_trigger.py)"]
+        S3Trigger["S3 CloudEvent Ingestion\n(4_event_driven_s3_trigger.py)"]
+        DashUser["DevOps Engineer / SRE\n(Control Plane Dashboard :8888)"]
     end
 
     subgraph K8sCluster ["☸️ Kubernetes Kind Cluster (Zero-Trust VPC)"]
-        subgraph OpenFaaSGW ["Ingress & Messaging Tier (Namespace: openfaas)"]
-            GW["OpenFaaS Gateway\n(Port 8080 : basic-auth)"]
-            NATS["NATS JetStream Broker (:4222)\nStreams: S3-EVENTS | DLQ-POISON"]
-            Connector["NATS-OpenFaaS Connector\n(In-Cluster Queue Consumer)"]
-            Idler["FinOps Auto-Idler Controller\n(Scale-to-Zero Enforcer)"]
+        subgraph StorageNS ["Storage Namespace: minio"]
+            MinIO["MinIO S3 Object Storage (:9000 & :9001)\nBuckets: uploads | processed | velero-backups\nEvent Notification Bridge: s3:ObjectCreated ➔ NATS"]
+        end
+
+        subgraph EventBus ["Event Broker Namespace: nats"]
+            JetStream["NATS JetStream Broker (:4222)\nStream: S3-EVENTS (Persistent WAL)"]
+            DLQ["Dead-Letter Queue DLQ-POISON\n(Subject: s3.events.dlq | 30-Day TTL)"]
+        end
+
+        subgraph OpenFaaSGW ["Ingress & Ingestion Namespace: openfaas"]
+            GW["OpenFaaS Gateway (:8080)\n(Reverse Proxy & Ingress Basic-Auth)"]
+            Idler["FinOps Auto-Idler Controller\n(20s Scale-to-Zero Governor)"]
+            Prom["Prometheus Metrics Engine\n(:8080/metrics Telemetry Scraper)"]
         end
 
         subgraph FunctionNS ["Stateless Compute Fleet (Namespace: openfaas-fn)"]
-            HPA["Horizontal Pod Autoscaler\n(1 to 5 Replicas / CPU >10% / 15s Cooldown)"]
+            Connector["NATS-OpenFaaS Connector\n(Durable Pull Consumer\n5s AckWait & 3-Retry Backoff)"]
+            HPA["Horizontal Pod Autoscaler HPA v2\n(1 to 5 Replicas / Target >10% CPU)"]
             
             subgraph Pod ["Hardened Pod: image-processor-app"]
                 direction TB
-                SecContext["SecurityContext:\n• UID 1000 (Non-Root)\n• readOnlyRootFilesystem: true\n• drop: ALL capabilities\n• seccompProfile: RuntimeDefault"]
+                SecContext["SecurityContext:\n• UID 1000 Non-Root\n• readOnlyRootFilesystem: true\n• drop: ALL capabilities\n• seccomp: RuntimeDefault"]
                 Handler["Python 3.12 + C-Libwebp Engine:\n• Magic Bytes Header Filter (16B)\n• Bucket Whitelist & Path Traversal Guard\n• Max 30MP Decompression Cap\n• Pillow C-Libwebp (quality=65, method=0)\n• In-Place EXIF Privacy Sanitizer\n• In-Memory SHA-256 ETag Micro-Cache\n• OpenTelemetry W3C TraceContext"]
                 RAMDisk[("Ephemeral RAM Scratchpad\n/tmp (32MB tmpfs Memory Cap)")]
             end
         end
 
-        subgraph StorageNS ["Storage & Disaster Recovery (Namespace: minio)"]
-            MinIO["MinIO S3 Object Storage (:9000)\nBuckets: uploads | processed | velero-backups"]
-            Velero["Velero Disaster Recovery\n(Automated Daily S3 Snapshot Schedule)"]
+        subgraph DisasterRecoveryNS ["Disaster Recovery Namespace: velero"]
+            Velero["Velero S3 Controller v1.15.2\n(AWS S3 Provider Plugin v1.11.0)\nDaily Cron Schedule: 0 2 * * * (30d TTL)\nTarget RTO < 15m, RPO < 1m"]
         end
 
-        subgraph PolicyCtrl ["🛡️ DevSecOps & Supply-Chain Governance"]
-            NetPol["NetworkPolicy (Default-Deny):\n• Ingress: openfaas:8080 only\n• Egress: minio:9000 & DNS:53 only"]
+        subgraph PolicyCtrl ["🛡️ DevSecOps & Governance Controls"]
+            NetPol["NetworkPolicy isolate-function-traffic:\n• Ingress: openfaas:8080 only\n• Egress: minio:9000 & DNS:53 only"]
             Cosign["Cosign ECDSA NIST P-256\nContainer Image Digest Verification"]
         end
     end
 
-    Client -->|1A. Sync Image Transcode| GW
+    Client -->|1A. Direct Sync HTTP POST| GW
     Client -->|1B. Upload Raw Image| MinIO
-    MinIO -.->|Event Notification| NATS
-    NATS -->|Pull Batch Events| Connector
-    Connector -->|Trigger Serverless Function| GW
+    MinIO -->|2. S3 ObjectCreated Event| JetStream
+    JetStream -->|3. Pull Event Batch| Connector
+    Connector -->|4. Forward CloudEvent POST| GW
+    Connector -.->|On 3 Failures: Poison Route| DLQ
+    Connector -->|On Success: JetStream ACK| JetStream
     LoadGen -->|Burst Concurrent Invocations| GW
-    GW -->|Zero-Trust Ingress TCP 8080| Pod
+    GW -->|5. Zero-Trust Ingress TCP 8080| Pod
     HPA -.->|Dynamic Replicas 1->5| Pod
     Idler -.->|Scale to 0 after 20s Inactivity| Pod
-    Pod -->|Single-Pass Memory Stream| RAMDisk
-    Pod -->|Zero-Trust Egress TCP 9000| MinIO
-    Velero -.->|Backup Snapshots| MinIO
+    Pod -->|6. Single-Pass Memory Stream| RAMDisk
+    Pod -->|7. PUT WebP to processed TCP 9000| MinIO
+    Velero -.->|Daily Snapshot Scope: openfaas, openfaas-fn, nats, minio| K8sCluster
+    Velero -->|Stream Tarballs to velero-backups| MinIO
     NetPol --- Pod
     Cosign -.->|Validate Image Signature| Pod
 ```
@@ -72,28 +84,38 @@ sequenceDiagram
     actor User as Client / User
     participant GW as OpenFaaS Gateway (:8080)
     participant NATS as NATS JetStream (:4222)
+    participant Conn as NATS-OpenFaaS Connector
     participant Pod as image-processor-app Pod
     participant Storage as MinIO S3 (:9000)
+    participant Velero as Velero DR Controller (:velero)
 
     alt 1. Synchronous Invocation Path
-        User->>GW: POST /function/image-processor-app (Image Payload)
+        User->>GW: POST /function/image-processor-app (Image Payload / S3 Ref)
         GW->>Pod: Forward Request to Watchdog (:8080)
         Note over Pod: Security Boundary & In-Memory Pipeline
         rect rgb(240, 248, 255)
             Pod->>Pod: 1. Validate 16-Byte Binary Magic Bytes (PNG/JPEG/WEBP)
             Pod->>Pod: 2. Check 30MP Decompression Cap & Strip EXIF
-            Pod->>Pod: 3. C-Libwebp Transcode (quality=65, method=0) in RAM /tmp
+            Pod->>Pod: 3. In-Memory SHA-256 Cache Check (1.2ms Hit)
+            Pod->>Pod: 4. C-Libwebp Transcode (quality=65, method=0) in RAM /tmp
             Pod->>Storage: PUT processed/optimized.webp (TCP 9000)
         end
         Pod-->>GW: HTTP 200 OK + FinOps Telemetry JSON
-        GW-->>User: HTTP 200 OK (WebP Stream + Telemetry)
+        GW-->>User: HTTP 200 OK (WebP S3 Ref + Telemetry JSON)
     else 2. Asynchronous Event-Driven Path
         User->>Storage: PUT uploads/raw_image.jpg (S3 API)
         Storage-->>NATS: Publish s3:ObjectCreated:Put Event
         NATS-->>User: HTTP 202 Accepted (Instant Non-Blocking)
-        NATS->>Pod: Pull Event & Invoke Worker
+        NATS->>Conn: Pull Event Batch (Stream: S3-EVENTS)
+        Conn->>GW: POST /function/image-processor-app (CloudEvent)
+        GW->>Pod: Forward Request to Pod
         Pod->>Storage: GET uploads/raw_image.jpg
         Pod->>Storage: PUT processed/raw_image_optimized.webp
+        Conn->>NATS: ACK Message (or route to DLQ-POISON on 3 failures)
+    else 3. Automated Disaster Recovery Backup Path
+        Velero->>Storage: Verify S3 Backup Storage Location (velero-backups)
+        Velero->>Velero: Execute Daily Cron Snapshot Schedule (0 2 * * *)
+        Velero->>Storage: Stream Compressed Tarballs (openfaas, openfaas-fn, nats, minio)
     end
 ```
 

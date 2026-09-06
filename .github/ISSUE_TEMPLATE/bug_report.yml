@@ -1,4 +1,4 @@
-name: 🐛 Bug Report
+name: Bug Report
 description: File a bug report to help us improve the pipeline.
 labels: ["bug", "triage"]
 body:

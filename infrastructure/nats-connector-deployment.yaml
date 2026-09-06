@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-connector-code
+  namespace: openfaas-fn
+data:
+  nats_openfaas_connector.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import json
+    import os
+    import requests
+    import nats
+    from nats.js.api import ConsumerConfig, AckPolicy, DeliverPolicy
+
+    NATS_URL = os.getenv("NATS_URL", "nats://nats.nats.svc.cluster.local:4222")
+    OPENFAAS_GATEWAY = os.getenv("OPENFAAS_GATEWAY", "http://gateway.openfaas.svc.cluster.local:8080")
+    FUNCTION_NAME = os.getenv("FUNCTION_NAME", "image-processor-app")
+    STREAM_NAME = "S3-EVENTS"
+    SUBJECT = "s3.events.uploads"
+    DURABLE_CONSUMER = "openfaas-image-processor-consumer"
+    MAX_DELIVER = 3
+
+    async def publish_to_dlq(js, original_payload: bytes, reason: str):
+        envelope = {
+            "original_event": json.loads(original_payload) if original_payload else {},
+            "failure_reason": reason,
+        }
+        await js.publish("s3.events.dlq", json.dumps(envelope).encode())
+        print(f"[DLQ] Routed poison message to DLQ-POISON: {reason}", flush=True)
+
+    async def handle_message(msg, js):
+        try:
+            payload = msg.data
+            body = json.loads(payload)
+            resp = requests.post(
+                f"{OPENFAAS_GATEWAY}/function/{FUNCTION_NAME}",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                timeout=15,
+            )
+
+            if resp.status_code == 200:
+                await msg.ack()
+                print(f"[ACK] Processed event, function returned 200 ({resp.elapsed.total_seconds()*1000:.1f}ms)", flush=True)
+            else:
+                num_delivered = msg.metadata.num_delivered
+                if num_delivered >= MAX_DELIVER:
+                    await publish_to_dlq(js, payload, f"HTTP {resp.status_code} after {num_delivered} attempts")
+                    await msg.ack()
+                else:
+                    await msg.nak()
+                    print(f"[NAK] Attempt {num_delivered}/{MAX_DELIVER} failed with HTTP {resp.status_code}, will retry", flush=True)
+
+        except Exception as e:
+            num_delivered = msg.metadata.num_delivered
+            if num_delivered >= MAX_DELIVER:
+                await publish_to_dlq(js, msg.data, f"Exception after {num_delivered} attempts: {e}")
+                await msg.ack()
+            else:
+                await msg.nak()
+                print(f"[NAK] Attempt {num_delivered}/{MAX_DELIVER} raised exception: {e}, will retry", flush=True)
+
+    async def main():
+        print(f"Connecting to NATS at {NATS_URL}...", flush=True)
+        nc = await nats.connect(NATS_URL)
+        js = nc.jetstream()
+
+        await js.add_consumer(
+            STREAM_NAME,
+            ConsumerConfig(
+                durable_name=DURABLE_CONSUMER,
+                ack_policy=AckPolicy.EXPLICIT,
+                deliver_policy=DeliverPolicy.ALL,
+                max_deliver=MAX_DELIVER,
+                ack_wait=5,
+            ),
+        )
+
+        psub = await js.pull_subscribe(SUBJECT, durable=DURABLE_CONSUMER, stream=STREAM_NAME)
+        print(f"👂 Listening on '{SUBJECT}' (stream={STREAM_NAME}), forwarding to {OPENFAAS_GATEWAY}/function/{FUNCTION_NAME}", flush=True)
+
+        while True:
+            try:
+                msgs = await psub.fetch(batch=5, timeout=5)
+            except asyncio.TimeoutError:
+                continue
+            for msg in msgs:
+                await handle_message(msg, js)
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-openfaas-connector
+  namespace: openfaas-fn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats-openfaas-connector
+  template:
+    metadata:
+      labels:
+        app: nats-openfaas-connector
+    spec:
+      containers:
+      - name: connector
+        image: python:3.12-slim
+        command: ["sh", "-c", "pip install --no-cache-dir nats-py requests && python /app/nats_openfaas_connector.py"]
+        env:
+        - name: NATS_URL
+          value: "nats://nats.nats.svc.cluster.local:4222"
+        - name: OPENFAAS_GATEWAY
+          value: "http://gateway.openfaas.svc.cluster.local:8080"
+        - name: FUNCTION_NAME
+          value: "image-processor-app"
+        volumeMounts:
+        - name: connector-code
+          mountPath: /app
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: 250m
+          requests:
+            memory: 64Mi
+            cpu: 50m
+      volumes:
+      - name: connector-code
+        configMap:
+          name: nats-connector-code

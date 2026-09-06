@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# 🛡️ Velero S3 (MinIO) Automated Setup & Backup Controller
-# Maintainer: Qadeer Aslam (qadeer016)
-# Specification: Cloud-Native Kubernetes Disaster Recovery & S3 Backup Management
+# Velero S3 (MinIO) Setup & Backup Controller
 # ==============================================================================
 
 set -eo pipefail
@@ -25,7 +23,7 @@ CREDENTIALS_FILE="${SCRIPT_DIR}/credentials-velero"
 
 echo -e "${CYAN}${BOLD}"
 echo "=============================================================="
-echo " 🛡️  VELERO S3 (MinIO) INSTALLATION & CONFIGURATION CONTROLLER"
+echo " Velero S3 (MinIO) Installation & Configuration Controller"
 echo "=============================================================="
 echo -e "${NC}"
 
@@ -77,15 +75,15 @@ echo -e "\n ${YELLOW}[4/4] Installing / Updating Velero Server in namespace 'vel
     --use-volume-snapshots=false \
     --wait
 
-echo -e "\n ⏳ Validating Backup Storage Location..."
+echo -e "\n Validating Backup Storage Location..."
 sleep 3
 "$VELERO_BIN" backup-location get
 
-echo -e "\n ${GREEN}${BOLD}✅ VELERO S3 BACKUP CONTROLLER SUCCESSFULLY CONFIGURED!${NC}"
+echo -e "\n ${GREEN}${BOLD}[OK] Velero S3 backup controller configured successfully.${NC}"
 echo -e " • S3 Storage Target : ${BOLD}${MINIO_ENDPOINT}/${MINIO_BUCKET}${NC}"
 echo -e " • Provider Plugin   : ${BOLD}AWS S3 v1.11.0 (MinIO Compatible)${NC}"
 echo -e " • Status            : ${GREEN}${BOLD}Active & Available${NC}"
 echo ""
-echo -e " 👉 ${CYAN}To create your first backup, run:${NC}"
+echo -e " ${CYAN}To create a backup, run:${NC}"
 echo -e "    ${BOLD}velero backup create pipeline-full-backup --include-namespaces openfaas,openfaas-fn,nats,minio --wait${NC}"
 echo ""

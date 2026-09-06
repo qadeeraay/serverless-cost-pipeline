@@ -1,37 +1,34 @@
-# 🛡️ Zero-Trust DevSecOps & Security Suite
-**Maintainer:** Qadeer Aslam (qadeer016)  
-**Security Baseline:** Cloud-Native Zero-Trust Container & Network Hardening  
+# DevSecOps & Security Suite
+
+This directory contains security configurations, verification scripts, and cryptographic keys implementing the zero-trust container and network security baseline.
 
 ---
 
-## 📂 Security Suite Contents & Quick Commands
-
-This directory contains all security configurations, scripts, and cryptographic keys:
+## Directory Contents
 
 | File | Type | Purpose & Scope |
 |---|---|---|
-| [`1_run_security_audit.py`](1_run_security_audit.py) | **Live Audit Script** | Runs live checks and verifies **10/10 compliance score** |
-| [`2_verify_cosign_signature.py`](2_verify_cosign_signature.py) | **Supply-Chain Tool** | Demonstrates **Cosign ECDSA container image signature verification** |
-| [`network_policy_and_secrets.yaml`](network_policy_and_secrets.yaml) | **Kubernetes Manifest** | **Zero-Trust NetworkPolicy** (Port 9000 & 53) + Secret encryption |
-| [`kyverno_cosign_policy.yaml`](kyverno_cosign_policy.yaml) | **Admission Policy** | **Kyverno Enforce Policy** for Cosign image signature verification |
-| [`security_keys/`](security_keys/) | **Key Vault** | ECDSA P-256 public key (`.pub`), manifest, and `.sig` signature (private keys strictly gitignored) |
-
+| [`1_run_security_audit.py`](1_run_security_audit.py) | Audit Script | Runs automated checks and verifies the 10/10 compliance score |
+| [`2_verify_cosign_signature.py`](2_verify_cosign_signature.py) | Verification Tool | Demonstrates Cosign ECDSA container image signature verification |
+| [`network_policy_and_secrets.yaml`](network_policy_and_secrets.yaml) | Kubernetes Manifest | Zero-Trust NetworkPolicy (Port 9000 & 53) and Secret configuration |
+| [`kyverno_cosign_policy.yaml`](kyverno_cosign_policy.yaml) | Admission Policy | Kyverno Enforce Policy for Cosign image signature verification |
+| [`security_keys/`](security_keys/) | Key Vault | ECDSA P-256 public key (`.pub`), manifest, and `.sig` signature |
 
 ---
 
-## 🚀 How to Run the Security Suite:
+## Running Verification
 
 ```bash
-# 1. Run the Complete DevSecOps Security Audit:
+# 1. Run DevSecOps security audit:
 python3 security_suite/1_run_security_audit.py
 
-# 2. Run the Cosign Cryptographic Signature Verification:
+# 2. Run Cosign signature verification:
 python3 security_suite/2_verify_cosign_signature.py
 ```
 
 ---
 
-## 🛡️ Core Security Architecture Controls
+## Core Security Controls
 
 * **Zero-Trust Microsegmentation:** Enforces default-deny ingress and egress via Kubernetes `NetworkPolicy`. Egress is restricted strictly to MinIO (Port 9000) and CoreDNS (Port 53), preventing lateral movement and external data exfiltration.
 * **Host & Runtime Hardening:** Enforces `readOnlyRootFilesystem: true`, non-root execution (`runAsUser: 1000`), and drops all Linux kernel capabilities (`drop: ["ALL"]`). Scratch space is isolated to an in-memory 32MB tmpfs RAM disk.

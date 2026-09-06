@@ -9,9 +9,8 @@
     "type": "cosign container image signature"
   },
   "optional": {
-    "maintainer": "Qadeer Aslam (qadeer016)",
     "specification": "Zero-Trust Container Supply-Chain Specification",
-    "signed_at": "2026-09-07T04:01:22Z",
+    "signed_at": "2026-09-07T04:24:03Z",
     "security_tier": "Enterprise Production Hardened"
   }
 }

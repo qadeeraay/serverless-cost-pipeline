@@ -1,48 +1,72 @@
-# 🛡️ Serverless Event-Driven Image Processing & FinOps Pipeline
+# Serverless Event-Driven Image Processing & FinOps Pipeline
 
 [![CI/CD Pipeline](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/ci.yml)
-[![DevSecOps Compliance](https://img.shields.io/badge/DevSecOps%20Compliance-10%2F10%20Verified-success?style=for-the-badge&logo=shield)](security_suite)
-[![FinOps Cost Reduction](https://img.shields.io/badge/FinOps%20Cost%20Reduction-99.8%25-blue?style=for-the-badge&logo=cashapp)](testing_suite)
-[![Cosign Container Signed](https://img.shields.io/badge/Cosign%20ECDSA-P--256%20Verified-brightgreen?style=for-the-badge&logo=docker)](security_suite/security_keys)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.29-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](infrastructure)
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](function/image-processor-app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+[![DevSecOps Compliance](https://img.shields.io/badge/DevSecOps%20Compliance-10%2F10%20Verified-success?style=flat-square&logo=shield)](security_suite)
+[![FinOps Cost Reduction](https://img.shields.io/badge/FinOps%20Cost%20Reduction-99.8%25-blue?style=flat-square)](testing_suite)
+[![Cosign Container Signed](https://img.shields.io/badge/Cosign%20ECDSA-P--256%20Verified-brightgreen?style=flat-square&logo=docker)](security_suite/security_keys)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.29-326CE5?style=flat-square&logo=kubernetes&logoColor=white)](infrastructure)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](function/image-processor-app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 ---
 
-## 📌 Executive Summary
+## Overview
 
-Modern cloud architectures frequently suffer from **fixed idle compute waste** (e.g., $30.36/month per dedicated `t3.small` VM) and **excessive network egress bandwidth fees** caused by unoptimized assets.
+Modern cloud architectures frequently suffer from fixed idle compute waste (such as dedicated virtual machines running during periods of low activity) and excessive network egress bandwidth costs caused by unoptimized or legacy asset formats.
 
-This project implements an enterprise-grade, **Serverless Event-Driven Image Processing & FinOps Pipeline** deployed on Kubernetes via **OpenFaaS**, **NATS JetStream**, **MinIO S3**, and a **Hardened Python 3.12 C-Libwebp Engine**.
+This repository provides an event-driven, serverless image processing pipeline built on Kubernetes using **OpenFaaS**, **NATS JetStream**, **MinIO S3**, and a hardened **Python 3.12 C-Libwebp engine**. The system showcases deterministic in-memory processing, strict container isolation, supply-chain verification, and automated scaling to zero.
 
-### 🌟 Key Performance & FinOps Metrics:
-* **Median In-RAM Transcoding Latency (P50):** `1.2 ms` (cache hit) to `18.51 ms` (C-Libwebp edge transcode)
-* **File Size & Egress Bandwidth Reduction:** `45.18%` to `58.98%` (JPEG $\to$ WebP vectorization)
-* **Scale-to-Zero Inactivity Idle Cost:** `$0.00 / month` (20s Auto-Idler Governor)
-* **FinOps Cloud Cost Savings:** `99.8%` vs Dedicated Cloud VMs ($0.07 vs $30.36 per 1M invocations)
-* **Zero-Trust Security Score:** `10.0 / 10.0` (Immutable Root FS, UID 1000, Cosign ECDSA, NetworkPolicy)
-* **Disaster Recovery (DR):** Velero S3 automated backups to MinIO S3 (`velero-backups`) with **Target RTO < 15m** and **RPO < 1m**
-
----
-
-## 💼 Portfolio & Resume Highlights
-
-> [!NOTE]
-> **Engineering Competencies Demonstrated:** Cloud-Native Architecture, Kubernetes Platform Engineering, FinOps Cloud Cost Engineering, DevSecOps & Zero-Trust Governance, Distributed Event Streaming, Disaster Recovery (DR), and High-Throughput In-Memory C-Extensions.
-
-* **FinOps Cloud Cost Optimization (99.8% Savings):** Architected scale-to-zero autoscaling (0 $\to$ 1 $\to$ 5 replicas) using OpenFaaS Idler and HPA v2. Replaced 24/7 idle EC2 compute instances ($30.36/month) with on-demand Spot container workloads ($0.07/month per million invocations).
-* **Zero-Copy In-RAM Performance:** Designed an ultra-low latency image optimization engine in Python 3.12 and Pillow C-Libwebp executing inside a **32MB tmpfs RAM scratchpad** (`emptyDir: medium: Memory`), achieving P50 latencies under 19ms and cache hits of 1.2ms without disk I/O bottlenecks.
-* **Network Egress Cost Slashed by 58.98%:** Automated JPEG/PNG to WebP transcoding directly in the S3 ingestion loop, reducing monthly outbound egress bandwidth fees by over half.
-* **Enterprise DevSecOps 10/10 Score:** Enforced strict pod security contexts (`runAsUser: 1000`, `readOnlyRootFilesystem: true`, `drop: ALL` capabilities, `RuntimeDefault` seccomp), Kubernetes `NetworkPolicy` micro-segmentation, and cryptographically verified supply-chain images via **Cosign NIST P-256 ECDSA**.
-* **Resilient Event-Driven Ingestion with DLQ:** Decoupled storage ingestion and compute via NATS JetStream persistent WAL, implementing at-least-once delivery, 5-second pull consumer acknowledgment windows, exponential retry backoff, and poison message routing to Dead-Letter Queues (`DLQ-POISON`).
-* **Disaster Recovery & Data Protection:** Configured Velero S3 with AWS provider plugin to snapshot cluster state, CRDs, and JetStream streams directly to MinIO S3 object storage on daily automated cron schedules (`0 2 * * *`).
+### Performance & Cost Summary
+* **Transcode Latency (P50):** `1.2 ms` (in-memory cache hit) / `18.51 ms` (C-Libwebp edge transcode)
+* **File Size & Egress Reduction:** `45.18%` to `58.98%` (JPEG/PNG to WebP conversion)
+* **Scale-to-Zero Idle Cost:** `$0.00 / month` (20s inactivity auto-idler)
+* **Compute Cost Reduction:** `99.8%` vs. dedicated VM baseline ($0.07 vs $30.36 per 1M invocations)
+* **Zero-Trust Security Baseline:** `10.0 / 10.0` (immutable rootfs, UID 1000, Cosign ECDSA, NetworkPolicy)
+* **Disaster Recovery:** Automated Velero S3 snapshots to MinIO (`velero-backups`), targeting RTO < 15m and RPO < 1m
 
 ---
 
-## 📸 Live Evidence & Observability Showcase
+## Key Architectural Highlights
 
-This section presents real telemetry, terminal executions, and visual verification captured from the live Kubernetes cluster.
+* **FinOps Scaling & Cost Optimization:** Replaced 24/7 dedicated VM compute ($30.36/month) with on-demand container workloads ($0.07/month per 1M invocations). Workloads scale from 0 to 5 replicas via HPA v2 and automatically scale down after 20 seconds of inactivity.
+* **In-Memory RAM Processing:** Designed an image optimization engine executing inside a **32MB tmpfs RAM scratchpad** (`emptyDir: medium: Memory`) with a read-only root filesystem, achieving sub-20ms median latency without disk I/O contention.
+* **Egress Bandwidth Optimization:** Automatically transcodes ingested PNG and JPEG assets to WebP during the storage lifecycle, cutting outbound network egress transfer sizes by approximately 45% to 59%.
+* **Container Hardening & DevSecOps:** Enforces non-root execution (`runAsUser: 1000`), drops all Linux kernel capabilities (`drop: ["ALL"]`), applies `RuntimeDefault` seccomp profiling, and restricts network traffic via Kubernetes `NetworkPolicy`.
+* **Supply-Chain Verification:** Container image manifests are cryptographically signed with Cosign (NIST P-256 ECDSA) and verified prior to admission.
+* **Decoupled Ingestion with Dead-Letter Handling:** MinIO bucket notifications publish to NATS JetStream persistent streams. A pull consumer processes events with explicit acknowledgments, exponential retry backoff (2s, 4s, 8s), and poison-pill routing to a Dead-Letter Queue (`DLQ-POISON`).
+* **Disaster Recovery Automation:** Velero controller configured with the AWS S3 provider plugin snapshots cluster manifests, OpenFaaS functions, and NATS JetStream state directly to MinIO object storage on an automated daily schedule (`0 2 * * *`).
+
+---
+
+## Production Gotchas & Engineering Decisions
+
+Building and operating this pipeline in production highlighted several critical engineering trade-offs:
+
+### 1. tmpfs Sizing vs. Container OOMKill
+* **Context:** The container runs with `readOnlyRootFilesystem: true`, requiring a writable scratchpad for Pillow and temporary bytecode. We mounted an in-memory tmpfs volume at `/tmp` (`emptyDir: {medium: "Memory"}`).
+* **Trade-off:** Sizing the tmpfs volume too large risks exhausting host memory under concurrent load, while sizing it too small causes container `OOMKill` (exit code 137) when decompressing larger images.
+* **Decision:** We capped the tmpfs scratchpad at `32Mi` and set pod cgroup memory limits to `256Mi`. To eliminate memory exhaustion vectors before decoding begins, we enforce `Image.MAX_IMAGE_PIXELS = 30_000_000` at the handler boundary, rejecting decompression bombs (e.g. 500MB uncompressed raw bitmaps) with HTTP 413.
+
+### 2. Libwebp Parameters: CPU Latency vs. Compression Ratio
+* **Context:** The libwebp C library provides compression methods ranging from `method=0` (fastest) to `method=6` (highest compression).
+* **Trade-off:** Benchmarks demonstrated that `method=6` achieved only ~3% better compression than `method=0`, but increased CPU processing time by over 700% (from ~18ms to ~145ms per image). Under burst traffic, this CPU overhead quickly exhausts pod capacity and triggers premature autoscaling churn.
+* **Decision:** We tuned the pipeline to `quality=65, method=0`. This achieves a 45–59% file size reduction while keeping median CPU processing under 19ms, maximizing concurrency and throughput per pod.
+
+### 3. Claim Check Pattern vs. Inline Payloads over Event Brokers
+* **Context:** Initial design considerations included passing base64-encoded image payloads directly inside NATS CloudEvent bodies.
+* **Trade-off:** Message brokers experience memory fragmentation, increased garbage collection pauses, and buffer bloat when handling multi-megabyte binary payloads.
+* **Decision:** We implemented the **Claim Check pattern**: clients upload assets directly to MinIO S3, and the event broker carries only lightweight event metadata (bucket, object key, ETag, traceparent). The serverless function retrieves the asset directly over internal ClusterIP networking (`minio-service:9000`).
+
+### 4. Scale-to-Zero Cold Starts vs. Baseline Compute Spend
+* **Context:** The OpenFaaS Idler scales the deployment down to 0 replicas after 20 seconds of inactivity.
+* **Trade-off:** Scaling to zero eliminates idle compute costs entirely, but introduces a 400–800ms cold-start latency on the subsequent request while Kubernetes schedules the pod and initializes the Python runtime.
+* **Decision:** For latency-sensitive production workloads, we set `min_replicas: 1` during business hours and allow idle scale-to-zero in development, staging, and off-peak environments.
+
+---
+
+## Telemetry & Evidence Showcase
+
+This section presents telemetry, terminal executions, and visual verification captured from the live Kubernetes cluster.
 
 ### 1. Real-Time Observability & Control Plane Dashboard
 Live multi-engine latency graphs, active pod fleet status, HPA utilization, and discrete process telemetry rendered on the custom control plane:
@@ -51,7 +75,7 @@ Live multi-engine latency graphs, active pod fleet status, HPA utilization, and 
 
 ---
 
-### 2. Zero-Trust Kubernetes Fleet & HPA Overwatch
+### 2. Hardened Kubernetes Pod Fleet & HPA Overwatch
 Active Kubernetes resources in the `openfaas-fn` namespace showing 1/1 Running pods, ClusterIP services, `NetworkPolicy` isolation, and the Horizontal Pod Autoscaler (`HPA v2`):
 
 ![Kubernetes Pod Fleet](screenshots/02-k8s-pod-fleet.png)
@@ -59,7 +83,7 @@ Active Kubernetes resources in the `openfaas-fn` namespace showing 1/1 Running p
 ---
 
 ### 3. In-Memory Transcoding & Egress Savings CLI Execution
-Real terminal execution of the synchronous image processing engine demonstrating **58.98% bandwidth reduction**, **1.2ms compute duration**, and in-place EXIF stripping:
+Terminal execution of the synchronous image processing engine demonstrating **58.98% bandwidth reduction**, **1.2ms compute duration**, and in-place EXIF stripping:
 
 ![CLI Processing Proof](screenshots/04-cli-transcoding-benchmark.png)
 
@@ -69,8 +93,8 @@ Output directory verifying processed WebP assets with 45% to 60% file size reduc
 
 ---
 
-### 4. Enterprise DevSecOps 10/10 Compliance Audit & Cosign Verification
-Live execution of the automated DevSecOps compliance suite confirming all 10 security controls, followed by cryptographic verification of the container image using ECDSA NIST P-256:
+### 4. DevSecOps 10/10 Compliance Audit & Cosign Verification
+Execution of the automated DevSecOps compliance suite confirming all 10 security controls, followed by cryptographic verification of the container image using ECDSA NIST P-256:
 
 ![DevSecOps Audit and Cosign](screenshots/06-devsecops-audit-cosign.png)
 
@@ -90,7 +114,7 @@ Benchmarking 20 concurrent invocations across cloud pricing tiers, validating up
 
 ---
 
-### 7. MinIO S3 Object Storage Raw vs Processed Buckets
+### 7. MinIO S3 Object Storage Raw vs. Processed Buckets
 MinIO Object Store console showing raw ingested images in the `uploads` bucket and optimized WebP assets in the `processed` bucket:
 
 | Ingested Raw Assets (`uploads/`) | Transcoded WebP Assets (`processed/`) |
@@ -99,25 +123,24 @@ MinIO Object Store console showing raw ingested images in the `uploads` bucket a
 
 ---
 
-### 8. Hardened Pod SecurityContext & 32MB tmpfs RAM Scratchpad
-Kubernetes pod YAML manifest proving `readOnlyRootFilesystem: true`, non-root user `UID 1000`, `drop: ALL` capabilities, and `32Mi` RAM disk mount:
+### 8. Hardened Pod Security Context & 32MB tmpfs RAM Scratchpad
+Kubernetes pod YAML manifest demonstrating `readOnlyRootFilesystem: true`, non-root user `UID 1000`, `drop: ALL` capabilities, and `32Mi` RAM disk mount:
 
 ![Pod Security Context](screenshots/11-hardened-pod-securitycontext.png)
 
 ---
 
-## 🏛️ System Architecture & Cloud Topology
+## System Architecture & Cloud Topology
 
 ```mermaid
 flowchart TB
-    subgraph ClientZone ["🌐 Client & Ingestion Zone"]
+    subgraph ClientZone ["Client & Ingestion Zone"]
         Client["Client / User\n(Uploads Raw Images)"]
         LoadGen["Load Generator & Benchmarks\n(testing_suite/*.py)"]
         DashUser["DevOps Engineer / SRE\n(Browser Control Plane :8888)"]
     end
 
-    subgraph K8sCluster ["☸️ Kubernetes Cluster (Zero-Trust VPC)"]
-        
+    subgraph K8sCluster ["Kubernetes Cluster (Zero-Trust VPC)"]
         subgraph StorageNS ["Storage Namespace: minio"]
             MinIO["MinIO S3 Object Store\n(Buckets: uploads, processed, velero-backups)\n(Ports 9000 & 9001)"]
         end
@@ -153,7 +176,7 @@ flowchart TB
             DashServer["Dashboard Server (:8888)\n(Real-Time Pod & Latency Monitor)"]
         end
 
-        subgraph PolicyCtrl ["🛡️ DevSecOps & Governance Controls"]
+        subgraph PolicyCtrl ["DevSecOps & Governance Controls"]
             NetPol["NetworkPolicy isolate-function-traffic:\n• Ingress: openfaas:8080 only\n• Egress: minio:9000 & DNS:53 only"]
             Cosign["Cosign ECDSA NIST P-256\nContainer Cryptographic Admission"]
         end
@@ -190,7 +213,7 @@ flowchart TB
 
 ---
 
-## 🔒 Zero-Trust Data Flow & Enterprise Security Boundaries
+## Data Flow & Security Boundaries
 
 ```mermaid
 sequenceDiagram
@@ -242,23 +265,23 @@ sequenceDiagram
 
 ---
 
-## 🗄️ S3 Storage Architecture & Data Lifecycle Governance
+## Storage Architecture & Data Lifecycle Governance
 
 ```mermaid
 flowchart LR
-    subgraph Tier1 ["📦 Tier 1: Raw Ingestion (Hot)"]
+    subgraph Tier1 ["Tier 1: Raw Ingestion (Hot)"]
         Uploads["Bucket: uploads/\n• Format: Raw JPEG / PNG\n• Ingestion: S3 API / Presigned URL\n• Retention: 30 Days\n• Event: s3:ObjectCreated -> NATS"]
     end
 
-    subgraph Tier2 ["⚡ Tier 2: Distribution (Warm)"]
+    subgraph Tier2 ["Tier 2: Distribution (Warm)"]
         Processed["Bucket: processed/\n• Format: Vectorized WebP\n• Bandwidth Savings: ~58.98%\n• Egress: Client / CDN Pull\n• Retention: Durable Output"]
     end
 
-    subgraph Tier3 ["🛡️ Tier 3: Velero DR & State Backups"]
+    subgraph Tier3 ["Tier 3: Velero DR & State Backups"]
         VeleroBucket["Bucket: velero-backups/\n• Format: .tar.gz Snapshots & Manifests\n• Target RTO < 15m, RPO < 1m\n• Automated Daily Schedule (0 2 * * *)\n• TTL Retention: 30 Days (720h)"]
     end
 
-    subgraph Tier4 ["❄️ Tier 4: Cold Glacier Archive"]
+    subgraph Tier4 ["Tier 4: Cold Glacier Archive"]
         Archive["Bucket: archive-cold/\n• Compressed Historical Tiers\n• Storage Class: S3 Glacier Deep Archive\n• Cost: $0.00099 / GB / mo"]
     end
 
@@ -270,7 +293,7 @@ flowchart LR
 
 ---
 
-## ⚡ Failure Handling, Retries & Dead-Letter Queue (DLQ)
+## Failure Handling, Retries & Dead-Letter Queue (DLQ)
 
 ```mermaid
 flowchart TD
@@ -291,9 +314,9 @@ flowchart TD
 
 ---
 
-## 💰 FinOps Multi-Tier Cost & TCO Analysis
+## FinOps Cost & Total Cost of Ownership (TCO) Analysis
 
-### Multi-Cloud Cost Comparison Matrix:
+### Multi-Cloud Cost Comparison Matrix
 | Monthly Workload Volume | Dedicated EC2 (`t3.small`) | AWS Lambda (`128MB`) | OpenFaaS on Spot K8s | FinOps Cost Reduction vs VM |
 | :--- | :---: | :---: | :---: | :---: |
 | **10,000 Calls** | $\$30.36$ | $\$0.00$ | **$\$0.00$ (Scale-to-Zero)** | **$100.0\%$** |
@@ -301,16 +324,16 @@ flowchart TD
 | **1,000,000 Calls** | $\$30.36$ | $\$0.25$ | **$\$0.07$** | **$99.8\%$** |
 | **10,000,000 Calls** | $\$30.36$ | $\$2.47$ | **$\$0.73$** | **$97.6\%$** |
 
-### 🧮 Total Cost of Ownership (TCO) Holistic Breakdown:
-* **Compute Savings:** OpenFaaS on Spot instances provides a **$99.8\%$** compute saving over traditional 24/7 dedicated VMs.
-* **Control Plane Infrastructure:** Multi-tenant Kubernetes clusters amortize control plane and worker node costs across dozens of microservices (Spot nodes @ $0.008/hr).
-* **Network Egress Optimization:** Converting uncompressed JPEG/PNG assets to WebP reduces file weight by **$45.18\%$ to $58.98\%$**, directly saving $0.09/GB on public cloud data transfer out fees.
+### Total Cost of Ownership (TCO) Breakdown
+* **Compute Savings:** OpenFaaS on Spot instances provides a **99.8%** compute saving over traditional 24/7 dedicated virtual machines.
+* **Control Plane Amortization:** Multi-tenant Kubernetes clusters amortize control plane and worker node costs across shared microservices.
+* **Network Egress Optimization:** Converting uncompressed JPEG/PNG assets to WebP reduces file weight by **45.18% to 58.98%**, directly saving $0.09/GB on public cloud data transfer out fees.
 * **Zero Idle Burn Rate:** The OpenFaaS FinOps Auto-Idler enforces a 20-second inactivity scale-down to 0 replicas, reducing off-peak resource consumption to `$0.00`.
-* **GitOps Operational Overhead:** Automated declarative GitOps workflows (Helm/ArgoCD) eliminate manual VM patching, reducing maintenance engineering overhead by **$>70\%$**.
+* **Operational Overhead:** Automated GitOps workflows (Helm/ArgoCD) eliminate manual virtual machine patching, reducing ongoing operational maintenance.
 
 ---
 
-## 🛡️ Enterprise DevSecOps 10/10 Compliance Matrix
+## DevSecOps 10/10 Compliance Matrix
 
 | Control Area | Implementation Mechanism | Purpose & Threat Mitigated |
 |---|---|---|
@@ -320,47 +343,51 @@ flowchart TD
 | **4. Capability Stripping** | `capabilities: drop: ["ALL"]` | Removes all 38+ Linux kernel root capabilities (`CAP_SYS_ADMIN`, `CAP_NET_RAW`, etc.). |
 | **5. Syscall Seccomp Filtering** | `seccompProfile: type: RuntimeDefault` | Blocks dangerous kernel syscalls at the container runtime level. |
 | **6. Secret Encryption** | Kubernetes `Secrets` & `secretKeyRef` | Zero plaintext credentials in Git. Injected into memory mounts (`/var/openfaas/secrets/`). |
-| **7. Ephemeral RAM Scratchpad** | `emptyDir: medium: Memory` (32MB cap) | Python in-memory transcoding executed purely in RAM at $>20\text{ GB/s}$ without disk write permissions. |
-| **8. Supply-Chain Signing** | **Cosign NIST P-256 ECDSA** | Container image digests are cryptographically signed. Admission controllers (Kyverno) verify signature before launch. |
+| **7. Ephemeral RAM Scratchpad** | `emptyDir: medium: Memory` (32MB cap) | Python in-memory transcoding executed purely in RAM without disk write permissions. |
+| **8. Supply-Chain Signing** | **Cosign NIST P-256 ECDSA** | Container image digests are cryptographically signed. Admission controllers verify signature before launch. |
 | **9. Decompression Bomb Cap** | `MAX_IMAGE_PIXELS = 30_000_000` | Rejects malicious high-pixel images with HTTP 413 before uncompressing into RAM. |
 | **10. Binary Magic Byte Validation** | Header inspection (first 16 bytes) | Validates true binary signatures (`\x89PNG`, `\xff\xd8`, `RIFF/WEBP`) to stop disguised shell/PHP script uploads. |
 
 ---
 
-## 📐 Architectural Decision Records (ADRs)
+## Architectural Decision Records (ADRs)
 
-### 1. Why OpenFaaS over AWS Lambda / Google Cloud Functions?
-* **Zero Vendor Lock-in & Sovereignty:** OpenFaaS runs on standard Kubernetes (Any cloud, bare-metal, or on-premises).
-* **Zero Egress Penalties:** In-cluster MinIO S3 object access occurs over internal cluster networking without public cloud data transfer charges.
-* **Custom Hardened Runtimes:** Full control over Linux kernel namespaces, seccomp filters, and Cosign supply-chain admission.
+### 1. OpenFaaS over Public Cloud Serverless
+* **Context:** Operating high-volume media processing on public cloud serverless (e.g. AWS Lambda) introduces recurring invocation markups, vendor lock-in, and inter-service egress charges.
+* **Decision:** Deploy OpenFaaS on Kubernetes with Spot instance autoscaling.
+* **Outcome:** Eliminates cloud vendor lock-in, bypasses public cloud egress charges, provides full control over low-level Linux security contexts, and reduces unit compute cost.
 
-### 2. Why NATS JetStream over Apache Kafka / RabbitMQ?
-* **Sub-millisecond Latency & Lightweight Footprint:** Written in Go, NATS JetStream uses $<50\text{MB}$ RAM vs Kafka's JVM overhead ($>1\text{GB}$).
-* **Native CloudEvent & Streaming Support:** Built-in message deduplication, at-least-once delivery, consumer groups, and automated DLQ routing.
+### 2. NATS JetStream over Kafka or RabbitMQ
+* **Context:** Ingestion triggers require durable messaging with minimal infrastructure footprint.
+* **Decision:** Use NATS JetStream with persistent WAL storage.
+* **Outcome:** Sub-millisecond latency, minimal RAM footprint (<50MB vs Kafka JVM >1GB), native CloudEvent support, and built-in at-least-once delivery with DLQ routing.
 
-### 3. Why MinIO over Public Cloud S3?
-* **100% S3-API Compatibility:** Seamless integration with standard AWS SDKs (`boto3`, `minio-py`).
-* **High-Performance Object Storage:** Native NVMe read/write speeds exceeding $10\text{ GB/s}$ within the local cluster network.
+### 3. MinIO over Public Cloud S3
+* **Context:** Storage layer requires high-speed read/write access without recurring network transit costs.
+* **Decision:** Deploy MinIO S3 object storage within the cluster VPC.
+* **Outcome:** 100% S3 API compatibility with standard AWS SDKs (`boto3`, `minio-py`), low-latency internal network transfer, and direct bucket notification integration with NATS.
 
-### 4. Why Python 3.12 with Pillow C-Libwebp?
-* **C-Native SIMD Vectorization:** Pillow delegates WebP transcoding to native C binaries (`libwebp` with `method=0`), achieving single-pass in-RAM encoding in under $19\text{ ms}$ (down to $1.2\text{ ms}$ warm cache hit).
+### 4. Python 3.12 with Pillow C-Libwebp
+* **Context:** High-throughput image processing requires fast encoding and low memory footprint.
+* **Decision:** Utilize Pillow with native C-Libwebp (`quality=65, method=0`).
+* **Outcome:** Single-pass in-RAM encoding completes in under 19ms (down to 1.2ms for cached assets), achieving 45%–59% file size reduction.
 
 ---
 
-## ⚡ Failure Handling & Disaster Recovery Analysis
+## Failure Handling & Disaster Recovery Analysis
 
-1. **What if NATS JetStream fails?**  
-   NATS runs as a `StatefulSet` (`infrastructure/nats.yaml`) with a `PersistentVolumeClaim`-backed JetStream store (WAL). In case of pod restart, unacknowledged messages are safely replayed from disk logs. The consumer (`infrastructure/nats_openfaas_connector.py`) uses an explicit-ack pull subscription, so any event not ACKed before a NATS restart is redelivered rather than lost.
-2. **What if a function crashes during execution (OOM / Exception)?**  
-   The OpenFaaS gateway returns `HTTP 500` / timeout. NATS JetStream triggers exponential backoff retries (2s, 4s, 8s). If a poison payload fails 3 times, it is diverted to the Dead-Letter Queue (`DLQ-POISON` / `s3.events.dlq`) for isolated forensics without stalling healthy queue traffic.
-3. **What if MinIO storage or cluster state is disrupted?**  
+1. **Broker Failure (NATS JetStream):**  
+   NATS runs as a `StatefulSet` (`infrastructure/nats.yaml`) with a `PersistentVolumeClaim`-backed JetStream store (WAL). On pod restart, unacknowledged messages are safely replayed from disk logs. The connector (`infrastructure/nats_openfaas_connector.py`) uses an explicit-ack pull subscription, ensuring events not ACKed before a restart are redelivered.
+2. **Compute Pod Crashes (OOM / Exception):**  
+   The OpenFaaS gateway returns `HTTP 500` / timeout. NATS JetStream triggers exponential backoff retries (2s, 4s, 8s). If a payload fails 3 times, it is diverted to the Dead-Letter Queue (`DLQ-POISON` / `s3.events.dlq`) for isolated investigation without blocking queue traffic.
+3. **Storage Disruption & Cluster State Recovery:**  
    Kubernetes application manifests, OpenFaaS functions, NATS JetStream configurations, and zero-trust secrets are backed up via **Velero** with an AWS S3 plugin connected directly to the in-cluster **MinIO Object Storage** (`velero-backups` bucket). An active daily schedule (`0 2 * * *`) and on-demand DR runners enforce a **Target RTO < 15m** and **RPO < 1m**.
 
 ---
 
-## 🚀 Quick-Start in 60 Seconds
+## Quickstart
 
-### Quick Verification Commands:
+### Verification Commands
 ```bash
 # 1. Run Complete DevSecOps 10/10 Compliance Audit
 ./cluster_manage.sh audit
@@ -379,17 +406,16 @@ python3 dashboard/server.py
 # -> Open browser to http://localhost:8888
 ```
 
-### Pure Event-Driven Ingestion Test (S3 $\to$ NATS $\to$ OpenFaaS):
+### Event-Driven Ingestion Test (S3 -> NATS -> OpenFaaS)
 ```bash
 # Upload image to trigger automated S3 event
 mc cp image_processing/sample_images/nature_mountain.jpg local-minio/uploads/
 
 # Inspect real-time connector logs
 kubectl logs -n openfaas-fn -l app=nats-openfaas-connector --tail=10
-# Output: [ACK] Processed event, function returned 200 (6.6ms)
 ```
 
-### Velero S3 Disaster Recovery & Backup Test:
+### Velero S3 Disaster Recovery & Backup Test
 ```bash
 ./infrastructure/backup_restore_demo.sh
 # Or via master controller: ./cluster_manage.sh backup-test
@@ -397,84 +423,72 @@ kubectl logs -n openfaas-fn -l app=nats-openfaas-connector --tail=10
 
 ---
 
-## 📁 Repository Structure
+## Project Structure
 
 ```
 serverless-cost-pipeline/
 ├── .github/
 │   ├── workflows/
-│   │   ├── ci.yml                             # Enterprise Multi-Job CI/CD Pipeline
+│   │   ├── ci.yml                             # Multi-Job CI/CD Pipeline
 │   │   └── devsecops-ci-cd.yml                # Scheduled DevSecOps & FinOps Audit
-│   ├── ISSUE_TEMPLATE/                        # Structured Issue Forms (Bug, Feature)
+│   ├── ISSUE_TEMPLATE/                        # Structured Issue Forms
 │   ├── dependabot.yml                         # Automated Security Updates
 │   └── PULL_REQUEST_TEMPLATE.md               # Standardized PR Checklist
-├── architecture_diagrams/                     # Draw.io System & DFD Architecture Diagrams
+├── architecture_diagrams/                     # Architecture & Data Flow Diagrams
 ├── dashboard/                                 # Real-Time Observability Web UI & Server (:8888)
-├── function/image-processor-app/              # Hardened In-RAM C-Libwebp Function
-│   ├── handler.py                             # High-Performance Transcoding & Zero-Trust Logic
+├── function/image-processor-app/              # In-RAM C-Libwebp Function
+│   ├── handler.py                             # Image Transcoding & Security Logic
 │   ├── handler_test.py                        # Automated Unit Test Suite (10/10 Passed)
 │   ├── requirements.txt                       # Function Dependencies
 │   └── tox.ini                                # Tox Environment Config
 ├── image_processing/                          # Test Assets & Transcoded Output
-│   ├── sample_images/                         # Test Image Datasets (Mountain, Forest, Architecture)
-│   └── processed_output/                      # Transcoded WebP Results (~58% Smaller)
-├── infrastructure/                            # Kubernetes Hardened Manifests & Velero DR
+│   ├── sample_images/                         # Test Image Datasets
+│   └── processed_output/                      # Transcoded WebP Results
+├── infrastructure/                            # Kubernetes Manifests & Velero DR
 │   ├── nats.yaml                              # NATS JetStream StatefulSet & WAL
-│   ├── configure_minio_nats_bridge.sh         # MinIO S3 Notification Wire
+│   ├── configure_minio_nats_bridge.sh         # MinIO S3 Notification Bridge
 │   ├── nats-connector-deployment.yaml         # Event Bridge Deployment & DLQ
 │   ├── minio.yaml                             # MinIO S3 Deployment & Service
-│   ├── k8s-function.yaml                      # OpenFaaS Hardened Pod Spec (UID 1000, 32MB tmpfs)
+│   ├── k8s-function.yaml                      # Hardened Pod Spec (UID 1000, 32MB tmpfs)
 │   ├── hpa.yaml                               # Horizontal Pod Autoscaler (HPA v2)
-│   ├── setup_velero.sh                        # Velero S3 Server & Plugin Bootstrapper
+│   ├── setup_velero.sh                        # Velero S3 Server & Plugin Setup
 │   ├── backup_restore_demo.sh                 # Disaster Recovery & Restore Test Runner
-│   ├── velero-schedule.yaml                   # Daily Automated Backup Schedule (0 2 * * *)
+│   ├── velero-schedule.yaml                   # Daily Automated Backup Schedule
 │   └── credentials-velero.example             # Example S3 Credentials for Velero
-├── screenshots/                               # Real Captured Evidence Screenshots
-│   ├── 01-observability-dashboard.png         # Real-Time Observability Control Plane
-│   ├── 02-k8s-pod-fleet.png                   # Kubernetes Pod Fleet & HPA Overwatch
-│   ├── 03-sample-input-assets.png             # Raw High-Res Ingested Assets
-│   ├── 04-cli-transcoding-benchmark.png       # CLI Benchmark Execution (58.98% Savings)
-│   ├── 05-optimized-webp-output.png           # Processed WebP Output Directory
-│   ├── 06-devsecops-audit-cosign.png          # 10/10 DevSecOps & Cosign Verification
-│   ├── 07-unit-chaos-test-suite.png           # Unit Tests (10/10) & Chaos Suite (5/5)
-│   ├── 08-finops-tco-analysis.png             # FinOps Multi-Tier Cloud Cost Comparison
-│   ├── 09-minio-raw-uploads.png               # MinIO S3 Raw Uploads Bucket Console
-│   ├── 10-minio-processed-webp.png            # MinIO S3 Processed WebP Bucket Console
-│   └── 11-hardened-pod-securitycontext.png    # Pod SecurityContext YAML Manifest Proof
-├── security_suite/                            # 10/10 DevSecOps & Cosign Verification
+├── screenshots/                               # Telemetry & Evidence Screenshots
+├── security_suite/                            # DevSecOps & Cosign Verification
 │   ├── 1_run_security_audit.py                # Automated 10/10 DevSecOps Audit Engine
 │   ├── 2_verify_cosign_signature.py           # Cosign ECDSA Container Signature Engine
 │   ├── kyverno_cosign_policy.yaml             # Kyverno Admission Controller Policy
 │   ├── network_policy_and_secrets.yaml        # NetworkPolicy & Secret Hardening
 │   └── security_keys/                         # ECDSA NIST P-256 Keypair & Signatures
-├── testing_suite/                             # Automated Test & Benchmark Engines
+├── testing_suite/                             # Test & Benchmark Engines
 │   ├── 1_upload_and_process.py                # CLI Uploader & Transcoding Runner
 │   ├── 2_load_test_autoscaling.py             # Burst Concurrency & HPA Autoscaling
 │   ├── 3_finops_cost_benchmark.py             # FinOps Latency & TCO Benchmark
 │   ├── 4_event_driven_s3_trigger.py           # S3 ObjectCreated Event Dispatcher
 │   └── 5_chaos_and_tracing_test.py            # Chaos Fault Injection & OTel Tracing
-├── ARCHITECTURE.md                            # Deep-Dive System Architecture Specification
+├── ARCHITECTURE.md                            # System Architecture Specification
 ├── CODE_OF_CONDUCT.md                         # Contributor Covenant v2.1
-├── CONTRIBUTING.md                            # Developer & Contribution Guidelines
-├── LICENSE                                    # MIT License (c) 2026 Qadeer Aslam
-├── Makefile                                   # Master Task Automation CLI
-├── pyproject.toml                             # Modern Python Tooling Configuration
-├── requirements-dev.txt                       # Development & Quality Assurance Packages
-├── cluster_manage.sh                          # Master 1-Command Cluster Controller
-└── README.md                                  # Executive Documentation & Project Overview
+├── CONTRIBUTING.md                            # Contributor Guidelines
+├── LICENSE                                    # MIT License
+├── Makefile                                   # Automation CLI
+├── pyproject.toml                             # Tooling Configuration
+├── requirements-dev.txt                       # Development & QA Packages
+├── cluster_manage.sh                          # Master Cluster Controller
+└── README.md                                  # Documentation & Project Overview
 ```
 
 ---
 
-## 👨‍💻 Maintainer & Lead Architect
+## Maintainer
 
 **Qadeer Aslam**  
 * GitHub: [@qadeeraay](https://github.com/qadeeraay)  
 * Email: [qadeeraslam016@gmail.com](mailto:qadeeraslam016@gmail.com)  
-* Focus: Cloud-Native Infrastructure, FinOps Cost Engineering, DevSecOps, & Distributed Systems
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.

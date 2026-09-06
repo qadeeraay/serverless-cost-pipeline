@@ -20,7 +20,7 @@ RESTORE_NAME="demo-restore-$(date +%s)"
 
 echo -e "${CYAN}${BOLD}"
 echo "=============================================================="
-echo " 🛡️  VELERO S3 BACKUP & DISASTER RECOVERY TEST RUNNER"
+echo " Velero S3 Backup & Disaster Recovery Test Runner"
 echo "=============================================================="
 echo -e "${NC}"
 
@@ -66,5 +66,5 @@ echo -e " ${GREEN}[✓] Restore test completed.${NC}\n"
 "$VELERO_BIN" restore describe "$RESTORE_NAME"
 
 echo -e "\n ${GREEN}${BOLD}==============================================================${NC}"
-echo -e " ${GREEN}${BOLD}🎉 DISASTER RECOVERY & VELERO S3 PIPELINE VERIFICATION PASSED!${NC}"
+echo -e " ${GREEN}${BOLD}[✓] Disaster Recovery and Velero S3 verification passed.${NC}"
 echo -e " ${GREEN}${BOLD}==============================================================${NC}\n"

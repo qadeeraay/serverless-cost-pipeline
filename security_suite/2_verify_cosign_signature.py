@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-✍️ Cosign / OpenSSL Cryptographic Image Signing & Verification Engine
-Specification: Container Supply-Chain Cryptographic Integrity & Admission Control
+Cosign / OpenSSL Container Image Signature Verification
+Specification: Supply-chain cryptographic integrity & admission policy verification
 """
 
 import os
@@ -26,7 +26,7 @@ def run_cmd(cmd):
 
 def main():
     print("==========================================================")
-    print(" ✍️  COSIGN SUPPLY-CHAIN SECURITY & CONTAINER SIGNING")
+    print(" Cosign Container Image Signature Verification")
     print("==========================================================")
 
     # 1. Ensure NIST P-256 (ECDSA) Keypair exists
@@ -49,7 +49,6 @@ def main():
             "type": "cosign container image signature"
         },
         "optional": {
-            "maintainer": "Qadeer Aslam (qadeer016)",
             "specification": "Zero-Trust Container Supply-Chain Specification",
             "signed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
             "security_tier": "Enterprise Production Hardened"
@@ -69,16 +68,16 @@ def main():
 
     if "Verified OK" in verify_res.stdout:
         print("\n" + "="*60)
-        print(" 🛡️  COSIGN SIGNATURE VERIFICATION: PASSED (Verified OK) ✅")
+        print(" COSIGN SIGNATURE VERIFICATION: PASSED (Verified OK)")
         print("="*60)
         print(f" • Image Reference   : {IMAGE_NAME}")
         print(f" • Verified Digest   : {digest}")
-        print(f" • Signed By         : Qadeer Aslam (qadeer016)")
+        print(f" • Key Type          : ECDSA NIST P-256")
         print(f" • Verification Key  : {PUBLIC_KEY}")
-        print(f" • Admission Verdict : ADMIT (Zero Supply-Chain Tampering)")
+        print(f" • Policy Verdict    : ADMIT (Signature Valid)")
         print("="*60)
     else:
-        print(f"❌ Signature Verification Failed: {verify_res.stderr}")
+        print(f" [✗] Signature Verification Failed: {verify_res.stderr}")
 
 if __name__ == "__main__":
     main()

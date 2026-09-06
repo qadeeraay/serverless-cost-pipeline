@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-⚡ Real-Time Multi-Test Visual Dashboard Server with Discrete S3 Process Telemetry
-Maintainer: Qadeer Aslam (qadeer016)
+Dashboard server for pipeline observability and telemetry metrics.
 Listens on Port 8888 (or CLI arg) to power all live testing triggers.
 """
 
@@ -213,7 +212,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
 def run_server(port=PORT):
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", port), DashboardHandler) as httpd:
-        print(f"🚀 Live Visual Performance Dashboard running at: http://127.0.0.1:{port}")
+        print(f"Observability Dashboard running at: http://127.0.0.1:{port}")
         httpd.serve_forever()
 
 if __name__ == "__main__":

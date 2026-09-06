@@ -78,9 +78,9 @@ def banner(title):
 # MODE 1: AUTOMATED DEVSECOPS & FUNCTION UNIT TESTS (10/10)
 # =============================================================
 def run_unit_tests():
-    banner("🧪 MODE 1: AUTOMATED DEVSECOPS & FUNCTION UNIT TESTS (10/10)")
-    print(" Lead Engineer : Qadeer Aslam (qadeer016)")
-    print(" Specification : Cloud-Native DevSecOps Baseline (Production Standard)")
+    banner("MODE 1: DEVSECOPS & FUNCTION UNIT TESTS (10/10)")
+    print(" Scope         : DevSecOps Baseline & Logic Verification")
+    print(" Target Module : handler.py")
     print("-" * 70)
 
     if handler is None:
@@ -186,7 +186,7 @@ def run_unit_tests():
         print(" [✗] 10. Path Traversal Defense Failed")
 
     print("-" * 70)
-    print(f" 🎉 UNIT TEST RESULTS: {passed}/{total} PASSED (100% SUCCESS RATE)")
+    print(f" Unit Test Results: {passed}/{total} passed (100% success rate)")
     print("=" * 70)
     return passed == total
 
@@ -194,16 +194,14 @@ def run_unit_tests():
 # MODE 2: SERVERLESS SCALE-TO-ZERO & COLD-START LIFECYCLE
 # =============================================================
 def run_lifecycle_proof():
-    banner("🚀 MODE 2: SERVERLESS SCALE-TO-ZERO & LIFECYCLE PROOF")
-    print(" Lead Engineer : Qadeer Aslam (qadeer016)")
-    print(" Specification : Serverless Auto-Scaling & FinOps Cost Optimization")
-    print(" Control       : OpenFaaS Auto-Idler + Kubernetes Cold-Start Manager")
-    print(" Gateway       : " + OPENFAAS_GATEWAY)
+    banner("MODE 2: SERVERLESS SCALE-TO-ZERO & LIFECYCLE PROOF")
+    print(" Target Gateway: " + OPENFAAS_GATEWAY)
+    print(" Controller    : OpenFaaS Auto-Idler + Kubernetes HPA")
     print("-" * 70)
 
     # Stage 1: Scale to Zero
-    print("\n 📍 STAGE 1: IDLE STATE — ZERO PODS & $0 CLOUD SPEND")
-    print(" Scaling function down to 0 replicas to simulate off-peak idle state...")
+    print("\n [Stage 1] Idle State: Scaling to 0 Replicas")
+    print(" Simulating off-peak idle state...")
     run_cmd("kubectl scale deployment -n openfaas-fn image-processor-app --replicas=0 2>/dev/null")
     for _ in range(20):
         total, ready = get_live_pod_info()
@@ -215,11 +213,11 @@ def run_lifecycle_proof():
     print(f" • Active Function Pods : {ready} pods (Scale-to-Zero Active)")
     print(f" • RAM Consumed         : 0 MB")
     print(f" • CPU Consumed         : 0 millicores")
-    print(f" • Hourly Compute Spend : $0.00000000 (100% FinOps Cost Avoidance)")
-    print(" ✅ PROVED: System incurs ZERO cost during periods of inactivity.")
+    print(f" • Hourly Compute Spend : $0.00000000 (Cost Avoidance)")
+    print(" [✓] Idle state confirmed: zero compute consumed.")
 
     # Stage 2: Cold Start Awakening (0 -> 1)
-    print("\n 📍 STAGE 2: INCOMING TRAFFIC EVENT — COLD START (0 ➔ 1 POD)")
+    print("\n [Stage 2] Incoming Request: Cold Start (0 -> 1 Pod)")
     print(" Triggering event-driven invocation while function is at 0 pods...")
     cold_start_begin = time.time()
     run_cmd("kubectl scale deployment -n openfaas-fn image-processor-app --replicas=1 2>/dev/null")
@@ -250,21 +248,21 @@ def run_lifecycle_proof():
         except Exception:
             time.sleep(0.3)
     print(f" • Request Status Code : {status_code} OK")
-    print(" ✅ PROVED: On-demand provisioning initializes compute on the fly.")
+    print(" [✓] Function initialized on demand.")
 
     # Stage 3: Burst Traffic & Horizontal Expansion (1 -> 5)
-    print("\n 📍 STAGE 3: HIGH LOAD TRAFFIC BURST — SCALE UP (1 ➔ 5 PODS)")
-    print(" Simulating viral burst concurrency expansion across pods...")
+    print("\n [Stage 3] Traffic Surge: Horizontal Scaling (1 -> 5 Pods)")
+    print(" Simulating concurrent burst expansion...")
     run_cmd("kubectl scale deployment -n openfaas-fn image-processor-app --replicas=5 2>/dev/null")
     time.sleep(2)
     total, ready = get_live_pod_info()
-    print(f" • Peak Function Replicas: {total} / 5 Pods Active (⚡ {ready} ready)")
+    print(f" • Peak Function Replicas: {total} / 5 Pods Active ({ready} ready)")
     print(f" • Load Distribution     : Round-robin across pods via OpenFaaS Gateway")
     print(f" • Horizontal Autoscaler : HPA triggered by CPU threshold (>10%)")
-    print(" ✅ PROVED: Architecture horizontally expands to absorb high traffic surges.")
+    print(" [✓] Replicas expanded horizontally to absorb burst load.")
 
     # Stage 4: Cooldown & Scale-to-Zero
-    print("\n 📍 STAGE 4: TRAFFIC SUBSIDES — SCALE-TO-ZERO RECLAMATION")
+    print("\n [Stage 4] Traffic Subsides: Scale-to-Zero Cooldown")
     run_cmd("kubectl scale deployment -n openfaas-fn image-processor-app --replicas=0 2>/dev/null")
     for _ in range(20):
         total, ready = get_live_pod_info()
@@ -272,11 +270,11 @@ def run_lifecycle_proof():
             break
         time.sleep(0.4)
     total, ready = get_live_pod_info()
-    print(f" • Final Pod Replicas   : {total} pods (100% Scale-to-Zero Demonstrated)")
+    print(f" • Final Pod Replicas   : {total} pods (Scale-to-Zero Active)")
     print(f" • Freed Memory         : 5x 256MB = 1,280 MB (1.28 GB) RAM released")
     print(f" • Freed CPU Capacity   : 5x 2.0 Cores = 10 CPU cores released")
     print("-" * 70)
-    print(" 🎉 COMPLETE SERVERLESS LIFECYCLE SUCCESSFULLY DEMONSTRATED ($0 IDLE COST)!")
+    print(" [✓] Serverless lifecycle demonstrated (scale-to-zero verified)")
     print("=" * 70)
 
     # Restore 1 warm pod for ongoing testing
@@ -349,16 +347,16 @@ def run_load_test(concurrency=25, duration=30, use_real_image=True):
 
     initial_total, initial_ready = get_live_pod_info()
 
-    banner("🔥 MODE 3: SERVERLESS RAPID HORIZONTAL AUTOSCALING STRESS TEST")
-    print(f" 🎯 Target Function   : image-processor-app (OpenFaaS on Kubernetes)")
-    print(f" 🌐 Gateway Endpoint  : {OPENFAAS_GATEWAY}")
-    print(f" 👥 Worker Concurrency: {concurrency} parallel clients")
-    print(f" ⏱️  Duration         : {duration} seconds (Fast responsive benchmark)")
-    print(f" 📦 Initial Replicas  : {initial_ready} ready / {initial_total} total")
-    print(f" 🖼️  Workload Mode    : {'Real MinIO Image Optimization (CPU Heavy)' if use_real_image else 'Synthetic Payload'}")
-    print(f" 📈 HPA Threshold     : Target 10% CPU -> Instant Scale-Up (Max: 5 Pods)")
+    banner("MODE 3: HORIZONTAL AUTOSCALING LOAD TEST")
+    print(f" Target Function   : image-processor-app (OpenFaaS on Kubernetes)")
+    print(f" Gateway Endpoint  : {OPENFAAS_GATEWAY}")
+    print(f" Worker Concurrency: {concurrency} parallel clients")
+    print(f" Duration          : {duration} seconds")
+    print(f" Initial Replicas  : {initial_ready} ready / {initial_total} total")
+    print(f" Workload Mode     : {'MinIO Image Optimization' if use_real_image else 'Synthetic Payload'}")
+    print(f" HPA Threshold     : Target 10% CPU -> Scale-Up (Max: 5 Pods)")
     print("-" * 70)
-    print(" 🚀 INITIATING LOAD GENERATION...\n")
+    print(" Starting load generation...\n")
 
     # Apply HPA
     hpa_path = os.path.join(BASE_DIR, "infrastructure", "hpa.yaml")
@@ -399,18 +397,17 @@ def run_load_test(concurrency=25, duration=30, use_real_image=True):
     success_pct = 100.0 if error_count == 0 else round((success_count / (total_invocations or 1)) * 100, 1)
 
     print("\n\n" + "=" * 70)
-    print(" 🏁 BENCHMARK & AUTOSCALING SUMMARY")
+    print(" Benchmark & Autoscaling Summary")
     print("=" * 70)
     print(f" • Duration Elapsed       : {elapsed_total}s")
     print(f" • Total Invocations Sent : {success_count:,}")
     print(f" • Successful 200 OKs     : {success_count:,} ({success_pct}%)")
     print(f" • Sustained Throughput   : {round(success_count / elapsed_total, 1)} req/sec")
     print(f" • Initial Pod Count      : {initial_total} pod(s)")
-    print(f" • Scaled Pod Count (Peak): {final_total} pod(s) (⚡ {final_ready} ready)")
+    print(f" • Scaled Pod Count (Peak): {final_total} pod(s) ({final_ready} ready)")
     print(f" • Peak HPA CPU Load      : {peak_cpu}%")
     print("-" * 70)
-    print(" 💡 LIVE POD WATCH: Run 'kubectl get pods -n openfaas-fn -w' to watch")
-    print("    pods automatically scale back down to 1 standby pod as traffic ceases!")
+    print(" Run 'kubectl get pods -n openfaas-fn -w' to observe scale-down cooldown.")
     print("=" * 70)
 
 # =============================================================
@@ -419,18 +416,18 @@ def run_load_test(concurrency=25, duration=30, use_real_image=True):
 def show_interactive_menu():
     while True:
         print("\n" + "=" * 70)
-        print(" 🚀 SERVERLESS SUITE: SELECT TEST EXECUTION MODE")
-        print(" Maintainer: Qadeer Aslam (qadeer016) | Enterprise Serverless Pipeline")
+        print(" Serverless Test & Load Execution Suite")
+        print(" Target: OpenFaaS Gateway (http://127.0.0.1:8080)")
         print("=" * 70)
-        print(" [1] 🔥 High-Concurrency Auto-Scaling Load Test (1 ➔ 5 Pods)")
-        print(" [2] ⚡ Serverless Scale-to-Zero Lifecycle Proof ($0 Idle Spend)")
-        print(" [3] 🧪 Automated DevSecOps & FaaS Unit Tests (10/10)")
-        print(" [4] 🌟 Run All Test Suites Sequentially (1 ➔ 2 ➔ 3)")
-        print(" [5] ❌ Exit")
+        print(" [1] High-concurrency autoscaling load test (1 -> 5 pods)")
+        print(" [2] Scale-to-zero and cold-start lifecycle test")
+        print(" [3] Automated unit tests (10/10 security & logic)")
+        print(" [4] Run all test suites sequentially")
+        print(" [5] Exit")
         print("=" * 70)
         
         try:
-            choice = input(" 👉 Enter selection [1-5]: ").strip()
+            choice = input(" Enter selection [1-5]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nExiting...")
             break

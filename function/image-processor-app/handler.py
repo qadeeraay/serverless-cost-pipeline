@@ -13,7 +13,7 @@ import io
 from datetime import datetime, timezone
 from PIL import Image
 
-# 🛡️ DevSecOps: Prevent Decompression Bomb DoS Attacks (Max 30 Megapixels)
+# Protect against decompression bomb DoS attacks (CVE-2023-4863 / libwebp memory exhaustion)
 Image.MAX_IMAGE_PIXELS = 30_000_000
 
 # MinIO Client Configuration
@@ -26,10 +26,10 @@ import urllib3
 from urllib3.util import Retry
 urllib3.disable_warnings()
 
-# 🛡️ DevSecOps & Zero-Trust: Authorized Bucket Allowlist (Prevents IDOR/BOLA attacks)
+# Bucket allowlist to enforce least privilege access
 ALLOWED_BUCKETS = {"uploads", "raw-images", "processed", "benchmark"}
 
-# 🚀 Performance: Pre-compiled Regex for Object Key Validation at Module Scope
+# Pre-compiled regex for object key sanitization
 RE_OBJECT_KEY = re.compile(r'^[a-zA-Z0-9_\-\./]+$')
 
 def _load_secret(key, default="", required=False):
@@ -56,7 +56,7 @@ MINIO_SECURE = _load_secret("MINIO_SECURE", "false").lower() == "true"
 SUPPORTED_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.webp', '.bmp', '.tiff')
 _IN_MEMORY_TRANSCODE_CACHE = {}
 
-# 🛡️ Enterprise Zero-Trust HTTP Security Headers
+# Standard zero-trust HTTP security headers
 SECURITY_HEADERS = {
     "Content-Type": "application/json",
     "X-Content-Type-Options": "nosniff",
@@ -67,7 +67,7 @@ SECURITY_HEADERS = {
 }
 
 def _init_minio_client():
-    """🚀 Performance: Pre-warm MinIO connection pool at module load for 0ms cold start."""
+    """Initialize MinIO client with connection pooling and retries."""
     if not Minio:
         return None
     try:
@@ -102,7 +102,7 @@ def get_minio_client():
     return _minio_client
 
 def validate_magic_bytes(header_bytes):
-    """🛡️ DevSecOps: Verify file signature magic bytes to prevent spoofed executables."""
+    """Validate image file signatures using magic byte headers."""
     if header_bytes.startswith(b'\x89PNG\r\n\x1a\n'):
         return "PNG"
     elif header_bytes.startswith(b'\xff\xd8\xff'):
@@ -116,16 +116,16 @@ def validate_magic_bytes(header_bytes):
     return None
 
 def validate_object_key(key):
-    """🛡️ DevSecOps: Sanitize object key against path traversal and dangerous characters."""
+    """Validate object key against path traversal and null-byte injection."""
     if not key or not isinstance(key, str):
         return False
     if ".." in key or key.startswith("/") or "\\" in key or "\x00" in key:
         return False
-    # Pre-compiled high-performance regex check
+    # Pre-compiled regex check
     return bool(RE_OBJECT_KEY.match(key))
 
 def strip_exif_metadata(img):
-    """🛡️ Privacy & FinOps: Ultra-fast zero-copy in-place EXIF sanitization without pixel buffer duplication."""
+    """Strip EXIF metadata in-place to prevent privacy leakage."""
     img.info.clear()
     return img
 
@@ -168,7 +168,7 @@ def handle(event, context=None):
         bucket_name = body_data["bucket"]
         object_name = body_data["object"]
 
-    # 🛡️ DevSecOps Security Boundary: Enforce Bucket Authorization
+    # Validate source bucket against allowlist
     if bucket_name not in ALLOWED_BUCKETS:
         return {
             "statusCode": 403,
@@ -179,7 +179,7 @@ def handle(event, context=None):
             })
         }
 
-    # 🛡️ DevSecOps Security Boundary: Enforce Object Key Path Traversal Defense
+    # Validate object key path to prevent directory traversal
     if object_name and not validate_object_key(object_name):
         return {
             "statusCode": 400,
@@ -214,7 +214,7 @@ def handle(event, context=None):
 
         try:
             processed_bucket = "processed"
-            # 🛡️ DevSecOps Security Boundary: Enforce Destination Bucket Authorization
+            # Validate destination bucket against allowlist
             if processed_bucket not in ALLOWED_BUCKETS:
                 return {
                     "statusCode": 403,
@@ -225,7 +225,7 @@ def handle(event, context=None):
                     })
                 }
 
-            # 2. Fast stream raw object
+            # Stream raw object from MinIO
             response = client.get_object(bucket_name, object_name)
             raw_bytes = response.read()
             response.close()
@@ -233,7 +233,7 @@ def handle(event, context=None):
 
             orig_size = len(raw_bytes)
 
-            # 🛡️ 3. DevSecOps: Validate Magic Byte Header (<1ms)
+            # Verify magic byte header before decoding
             detected_type = validate_magic_bytes(raw_bytes[:16])
             if not detected_type:
                 return {
@@ -247,7 +247,7 @@ def handle(event, context=None):
 
             orig_hash = hashlib.sha256(raw_bytes).hexdigest()
 
-            # 4. Ultra-Fast In-Memory WebP Transcoding (with Sub-2ms ETag/Hash Cache Hit)
+            # In-memory WebP transcoding with SHA-256 cache
             t_compute_start = time.time()
             if orig_hash in _IN_MEMORY_TRANSCODE_CACHE:
                 cached_entry = _IN_MEMORY_TRANSCODE_CACHE[orig_hash]
@@ -257,17 +257,17 @@ def handle(event, context=None):
                 image_metadata["processed_at"] = datetime.now(timezone.utc).isoformat()
             else:
                 with Image.open(io.BytesIO(raw_bytes)) as raw_img:
-                    # 🛡️ Explicitly strip EXIF GPS and camera metadata for privacy (Zero-copy in-place info reset)
+                    # Strip EXIF GPS and camera metadata for privacy
                     sanitized_img = strip_exif_metadata(raw_img)
                     
-                    # 🚀 Responsive CDN Edge Normalization (Capping width at 1200px for web delivery)
+                    # Normalize dimensions (cap max width/height at 1200px for web delivery)
                     orig_width, orig_height = sanitized_img.size
                     if max(orig_width, orig_height) > 1200:
                         scale = 1200 / max(orig_width, orig_height)
                         new_size = (int(orig_width * scale), int(orig_height * scale))
                         sanitized_img = sanitized_img.resize(new_size, Image.Resampling.BILINEAR)
 
-                    # Transcode to WebP directly in-memory (Single-pass C-engine, zero redundant buffers)
+                    # Transcode to WebP in memory using libwebp C-extension
                     webp_buffer = io.BytesIO()
                     sanitized_img.save(
                         webp_buffer,

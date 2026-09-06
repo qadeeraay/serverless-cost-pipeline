@@ -21,13 +21,12 @@ GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 banner() {
     echo -e "${CYAN}${BOLD}"
     echo "=============================================================="
-    echo " 🛠️  SERVERLESS DEVSECOPS & FINOPS CLUSTER CONTROLLER"
+    echo " Serverless Cluster & Pipeline Controller"
     echo "=============================================================="
     echo -e "${NC}"
 }
@@ -38,25 +37,25 @@ usage() {
     echo ""
     echo -e " ${YELLOW}Usage:${NC} ./cluster_manage.sh [command]"
     echo ""
-    echo -e " ${BOLD}Lifecycle Commands:${NC}"
-    echo -e "   ${GREEN}start${NC}         -> High-performance resume (Verifies all pods & S3)"
-    echo -e "   ${YELLOW}stop${NC}          -> Graceful shutdown for PC turn-off (Flushes data, 0% CPU/RAM)"
-    echo -e "   ${CYAN}status${NC}        -> Visual cluster health, pod metrics & endpoint overwatch"
-    echo -e "   ${CYAN}restart${NC}       -> Clean restart of Kind cluster container"
-    echo -e "   ${GREEN}optimize${NC}      -> Maximize performance (<20ms), sync engine & enforce 10/10 security"
-    echo -e "   ${GREEN}heal${NC}          -> Self-heal any broken configs or rollout delays"
-    echo -e "   ${CYAN}backup${NC}        -> Execute on-demand Velero backup to MinIO S3"
-    echo -e "   ${CYAN}backup-test${NC}   -> Run full Velero backup, MinIO S3 verification & restore test"
-    echo -e "   ${CYAN}audit${NC}         -> Run full automated DevSecOps & FinOps test suite"
+    echo -e " ${BOLD}Commands:${NC}"
+    echo -e "   ${GREEN}start${NC}         -> Resume cluster and reconcile workloads"
+    echo -e "   ${YELLOW}stop${NC}          -> Graceful shutdown (0% CPU/RAM, state preserved)"
+    echo -e "   ${CYAN}status${NC}        -> Component health, pod metrics, and HPA status"
+    echo -e "   ${CYAN}restart${NC}       -> Restart Kind cluster container"
+    echo -e "   ${GREEN}optimize${NC}      -> Re-apply configs and rolling restart function"
+    echo -e "   ${GREEN}heal${NC}          -> Reconcile any stalled pods or rollouts"
+    echo -e "   ${CYAN}backup${NC}        -> Create on-demand Velero backup to MinIO S3"
+    echo -e "   ${CYAN}backup-test${NC}   -> Run full backup and disaster recovery test"
+    echo -e "   ${CYAN}audit${NC}         -> Run full DevSecOps and FinOps verification suite"
     echo "=============================================================="
     exit 1
 }
 
 wait_for_apiserver() {
-    echo -e " ⏳ Waiting for Kubernetes API server to become responsive..."
+    echo -e " Waiting for Kubernetes API server..."
     for i in $(seq 1 30); do
         if kubectl get nodes &>/dev/null; then
-            echo -e " ${GREEN}[✓] Kubernetes API Server is Ready.${NC}"
+            echo -e " ${GREEN}[✓] Kubernetes API Server is ready.${NC}"
             return 0
         fi
         sleep 1
@@ -66,7 +65,7 @@ wait_for_apiserver() {
 }
 
 wait_for_openfaas() {
-    echo -e " ⏳ Waiting for OpenFaaS Gateway & Microservices..."
+    echo -e " Waiting for OpenFaaS Gateway and MinIO S3..."
     kubectl wait --for=condition=available --timeout=45s deployment/gateway -n openfaas 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=45s deployment/minio -n minio 2>/dev/null || true
     kubectl wait --for=condition=available --timeout=45s deployment/image-processor-app -n openfaas-fn 2>/dev/null || true
@@ -75,45 +74,29 @@ wait_for_openfaas() {
 case "$1" in
     stop|down|pause|shutdown)
         banner
-        echo -e " 🛑 ${BOLD}INITIATING GRACEFUL CLUSTER SHUTDOWN...${NC}\n"
-        
-        # 1. Sync file system and flush container buffers
-        echo -e " [1/3] Flushing in-memory MinIO S3 sync buffers..."
+        echo -e " ==> Stopping cluster container ($KIND_CONTAINER)..."
+        echo -e " [1/3] Flushing in-memory sync buffers..."
         sync || true
-        
-        # 2. Stop Kind control plane cleanly
-        echo -e " [2/3] Gracefully suspending Kind Kubernetes cluster ($KIND_CONTAINER)..."
+        echo -e " [2/3] Gracefully suspending Kind cluster container..."
         docker stop -t 5 "$KIND_CONTAINER" >/dev/null
-        
-        # 3. Confirmation
-        echo -e " [3/3] Releasing host memory and CPU..."
+        echo -e " [3/3] Releasing host resources..."
         echo ""
-        echo -e " ${GREEN}${BOLD}✅ CLUSTER SAFELY SUSPENDED!${NC}"
-        echo -e " • Host Resource Usage : ${BOLD}0% CPU / 0 MB RAM${NC}"
-        echo -e " • State & Artifacts   : ${BOLD}100% Preserved in Docker Volume${NC}"
-        echo -e " • Safe to Action      : ${BOLD}You can now safely shut down or restart your PC.${NC}"
-        echo ""
-        echo -e " 👉 ${CYAN}When your PC turns back on, run:${NC} ${BOLD}./cluster_manage.sh start${NC}\n"
+        echo -e " ${GREEN}[✓] Cluster suspended.${NC}"
+        echo -e " • Host resource usage: 0% CPU / 0 MB RAM"
+        echo -e " • State: Preserved in Docker persistent volume"
+        echo -e " • Resume command: ./cluster_manage.sh start\n"
         ;;
 
     start|up|resume|boot)
         banner
-        echo -e " 🚀 ${BOLD}STARTING & AUTO-OPTIMIZING SERVERLESS PIPELINE...${NC}\n"
-        
-        # 1. Start Docker Container
-        echo -e " [1/5] Starting Docker container ($KIND_CONTAINER)..."
+        echo -e " ==> Starting serverless pipeline cluster ($KIND_CONTAINER)..."
+        echo -e " [1/5] Starting Docker container..."
         docker start "$KIND_CONTAINER" >/dev/null
-        
-        # 2. Wait for API Server
-        echo -e " [2/5] Initializing Kubernetes control plane..."
+        echo -e " [2/5] Checking Kubernetes control plane..."
         wait_for_apiserver
-        
-        # 3. Wait for Services
-        echo -e " [3/5] Validating OpenFaaS Gateway & MinIO S3 storage..."
+        echo -e " [3/5] Waiting for OpenFaaS Gateway and MinIO..."
         wait_for_openfaas
-
-        # 4. Auto-Apply Maximum Performance & Zero-Trust Hardening
-        echo -e " [4/5] Auto-applying Zero-Trust policies, RAM disk & optimized engine..."
+        echo -e " [4/5] Reconciling NetworkPolicy, secrets, and pod specs..."
         PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         kubectl apply -f "${PROJECT_DIR}/security_suite/network_policy_and_secrets.yaml" >/dev/null 2>&1 || true
         kubectl create configmap function-handler-code \
@@ -125,20 +108,17 @@ case "$1" in
         kubectl rollout restart deployment image-processor-app -n openfaas-fn >/dev/null 2>&1 || true
         kubectl rollout status deployment image-processor-app -n openfaas-fn --timeout=35s >/dev/null 2>&1 || true
         
-        # 5. Health Check
         echo -e " [5/5] Active Pod Summary:"
         kubectl get pods -n openfaas-fn
         echo ""
-        echo -e " ${GREEN}${BOLD}🎉 CLUSTER IS FULLY ONLINE, HARDENED & PEAK OPTIMIZED!${NC}"
-        echo -e " • Gateway Endpoint : ${BOLD}http://127.0.0.1:8080${NC}"
-        echo -e " • MinIO Storage    : ${BOLD}http://127.0.0.1:9000${NC}"
-        echo -e " • Engine Latency   : ${BOLD}1.2ms (Cache Hit) / <20ms (Edge Transcode)${NC}"
-        echo -e " • DevSecOps Status : ${BOLD}Zero-Trust NetworkPolicy, UID 1000 & 32MB RAM Disk Active${NC}\n"
+        echo -e " ${GREEN}[✓] Cluster online and ready.${NC}"
+        echo -e " • Gateway Endpoint : http://127.0.0.1:8080"
+        echo -e " • MinIO Storage    : http://127.0.0.1:9000\n"
         ;;
 
     status|health|check)
         banner
-        echo -e " 📊 ${BOLD}SERVERLESS CLUSTER HEALTH OVERWATCH${NC}\n"
+        echo -e " ==> Cluster Component Health Overview:\n"
         
         DOCKER_STATUS=$(docker inspect -f '{{.State.Status}}' "$KIND_CONTAINER" 2>/dev/null || echo 'Not Running')
         if [ "$DOCKER_STATUS" = "running" ]; then
@@ -149,23 +129,23 @@ case "$1" in
         fi
 
         echo ""
-        echo -e " ${BOLD}📦 Kubernetes Nodes:${NC}"
+        echo -e " ${BOLD}Kubernetes Nodes:${NC}"
         kubectl get nodes --no-headers 2>/dev/null | awk '{print "   • Node: "$1" | Status: "$2" | Version: "$5}'
         
         echo ""
-        echo -e " ${BOLD}⚡ Serverless Function Pods (openfaas-fn):${NC}"
+        echo -e " ${BOLD}Serverless Function Pods (openfaas-fn):${NC}"
         kubectl get pods -n openfaas-fn --no-headers 2>/dev/null | awk '{print "   • Pod: "$1" | Ready: "$2" | Status: "$3" | Restarts: "$4}'
         
         echo ""
-        echo -e " ${BOLD}📈 Horizontal Pod Autoscaler (HPA):${NC}"
+        echo -e " ${BOLD}Horizontal Pod Autoscaler (HPA):${NC}"
         kubectl get hpa -n openfaas-fn --no-headers 2>/dev/null | awk '{print "   • HPA: "$1" | Target: "$3" | Replicas: "$6" (Min: "$4" / Max: "$5")"}'
 
         echo ""
-        echo -e " ${BOLD}🪣 MinIO Storage S3 Health:${NC}"
+        echo -e " ${BOLD}MinIO Storage (minio):${NC}"
         kubectl get pods -n minio --no-headers 2>/dev/null | awk '{print "   • Storage Pod: "$1" | Status: "$3}'
 
         echo ""
-        echo -e " ${BOLD}🛡️ Velero S3 Backup Controller:${NC}"
+        echo -e " ${BOLD}Velero S3 Backup Controller:${NC}"
         VELERO_PHASE=$(kubectl get backupstoragelocation -n velero -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "Not Installed")
         echo -e "   • Backup Target (MinIO S3): ${GREEN}${BOLD}${VELERO_PHASE}${NC}"
         echo ""
@@ -173,7 +153,7 @@ case "$1" in
 
     backup|snapshot)
         banner
-        echo -e " 🛡️  ${BOLD}TRIGGERING VELERO ON-DEMAND BACKUP TO MINIO S3...${NC}\n"
+        echo -e " ==> Creating on-demand Velero backup to MinIO S3...\n"
         VELERO_BIN="${HOME}/.local/bin/velero"
         if [ ! -f "$VELERO_BIN" ]; then
             echo -e " ${RED}[✗] Velero not found. Run ./infrastructure/setup_velero.sh first.${NC}"
@@ -181,13 +161,13 @@ case "$1" in
         fi
         BACKUP_ID="pipeline-backup-$(date +%s)"
         "$VELERO_BIN" backup create "$BACKUP_ID" --include-namespaces openfaas,openfaas-fn,nats,minio --wait
-        echo -e " ${GREEN}✅ Backup '$BACKUP_ID' completed and synchronized with MinIO S3 bucket 'velero-backups'!${NC}\n"
+        echo -e " ${GREEN}[✓] Backup '$BACKUP_ID' synchronized with bucket 'velero-backups'.${NC}\n"
         "$VELERO_BIN" backup describe "$BACKUP_ID"
         ;;
 
     backups|list-backups)
         banner
-        echo -e " 🛡️  ${BOLD}VELERO S3 BACKUPS INVENTORY${NC}\n"
+        echo -e " ==> Velero S3 Backups:\n"
         VELERO_BIN="${HOME}/.local/bin/velero"
         if [ -f "$VELERO_BIN" ]; then
             "$VELERO_BIN" backup get
@@ -204,49 +184,49 @@ case "$1" in
 
     scale-to-zero|zero|idle)
         banner
-        echo -e " ⚡ ${BOLD}ENFORCING FINOPS SCALE-TO-ZERO ($0 COMPUTE)...${NC}"
+        echo -e " ==> Scaling function deployment to 0 replicas..."
         kubectl scale deployment -n openfaas-fn image-processor-app --replicas=0
-        echo -e " ${GREEN}✅ Function scaled down to 0 replicas. Ready for on-demand cold-start!${NC}\n"
+        echo -e " ${GREEN}[✓] Function scaled down to 0 replicas (scale-to-zero active).${NC}\n"
         ;;
 
     optimize|harden|heal|fix|repair)
         banner
-        echo -e " ⚡ ${BOLD}APPLYING MAXIMUM PERFORMANCE & ZERO-TRUST SECURITY...${NC}\n"
+        echo -e " ==> Reconciling performance and security configuration...\n"
         PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         
-        echo -e " [1/4] Applying Zero-Trust NetworkPolicy & Secret Hardening..."
+        echo -e " [1/4] Applying NetworkPolicy and secrets..."
         kubectl apply -f "${PROJECT_DIR}/security_suite/network_policy_and_secrets.yaml" >/dev/null
         
-        echo -e " [2/4] Syncing Optimized Python 3.12 Engine (1.2ms Cache + WebP C-Lib)..."
+        echo -e " [2/4] Syncing handler configmap..."
         kubectl create configmap function-handler-code \
           --from-file=handler.py="${PROJECT_DIR}/function/image-processor-app/handler.py" \
           -n openfaas-fn --dry-run=client -o yaml | kubectl apply -f - >/dev/null
           
-        echo -e " [3/4] Enforcing Hardened Pod Spec & 32MB RAM-Disk Mount..."
+        echo -e " [3/4] Reconciling pod specifications and HPA..."
         kubectl apply -f "${PROJECT_DIR}/infrastructure/k8s-function.yaml" >/dev/null
         kubectl apply -f "${PROJECT_DIR}/infrastructure/function.yaml" >/dev/null
         kubectl apply -f "${PROJECT_DIR}/infrastructure/hpa.yaml" >/dev/null
         
-        echo -e " [4/4] Performing Clean Rolling Restart..."
+        echo -e " [4/4] Performing rolling deployment restart..."
         kubectl rollout restart deployment image-processor-app -n openfaas-fn >/dev/null
         kubectl rollout status deployment image-processor-app -n openfaas-fn --timeout=35s >/dev/null
         
-        echo -e "\n ${GREEN}${BOLD}✅ ALL PERFORMANCE & SECURITY CONTROLS RECONCILED (10/10)!${NC}\n"
+        echo -e "\n ${GREEN}[✓] All controls reconciled successfully.${NC}\n"
         ;;
 
     restart)
         banner
-        echo -e " 🔄 ${BOLD}RESTARTING KIND CLUSTER CONTAINER...${NC}"
+        echo -e " ==> Restarting Kind cluster container..."
         docker restart "$KIND_CONTAINER"
         wait_for_apiserver
         wait_for_openfaas
         kubectl get pods -n openfaas-fn
-        echo -e " ${GREEN}✅ Restart Complete!${NC}\n"
+        echo -e " ${GREEN}[✓] Restart complete.${NC}\n"
         ;;
 
     audit|test|eval|evaluate)
         banner
-        echo -e " 🧪 ${BOLD}RUNNING MASTER DEVSECOPS & FINOPS EVALUATION SUITE...${NC}\n"
+        echo -e " ==> Running verification test suite...\n"
         PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         python3 "${PROJECT_DIR}/security_suite/1_run_security_audit.py"
         echo ""
@@ -257,7 +237,7 @@ case "$1" in
         python3 "${PROJECT_DIR}/testing_suite/5_chaos_and_tracing_test.py"
         echo ""
         python3 "${PROJECT_DIR}/testing_suite/3_finops_cost_benchmark.py"
-        echo -e "\n ${GREEN}${BOLD}🎉 ALL EVALUATIONS COMPLETE (100% PRODUCTION READY)${NC}\n"
+        echo -e "\n ${GREEN}[✓] All verification suites passed successfully.${NC}\n"
         exit 0
         ;;
 

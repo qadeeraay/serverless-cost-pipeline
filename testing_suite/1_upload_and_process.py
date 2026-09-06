@@ -38,16 +38,16 @@ def main():
     base_name, ext = os.path.splitext(filename)
 
     if not ext.lower().endswith(SUPPORTED_EXTS):
-        print(f"\n❌ Error: Unsupported format '{ext}'. Supported: {SUPPORTED_EXTS}\n")
+        print(f"\nError: Unsupported format '{ext}'. Supported: {SUPPORTED_EXTS}\n")
         sys.exit(1)
 
     orig_size = os.path.getsize(file_path)
 
     print("==========================================================")
-    print(" 🚀 UPLOADING & PROCESSING IMAGE IN SERVERLESS PIPELINE")
-    print(f" ⚙️ Mode: {'⚡ High-Speed Asynchronous NATS Decoupled' if is_async else '🔄 Synchronous Direct Response'}")
+    print(" Serverless Image Processing & Optimization CLI")
+    print(f" Mode: {'Asynchronous NATS Ingestion' if is_async else 'Synchronous Ingestion'}")
     print("==========================================================")
-    print(f" 📁 File: {filename} ({orig_size:,} bytes)")
+    print(f" Source: {filename} ({orig_size:,} bytes)")
 
     # 1. Connect to MinIO
     client = Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=False)
@@ -62,7 +62,7 @@ def main():
 
     # 3. Trigger Serverless OpenFaaS Function
     endpoint = f"{OPENFAAS_GATEWAY}/async-function/image-processor-app" if is_async else f"{OPENFAAS_GATEWAY}/function/image-processor-app"
-    print(f" [⏳] 2. Triggering Serverless Function ({'NATS Non-Blocking Message Bus' if is_async else 'Auto Cold-Start Active'})...")
+    print(f" [*] 2. Triggering function endpoint...")
     start_time = time.time()
     
     pass_output = os.popen('kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode').read().strip()
@@ -91,19 +91,19 @@ def main():
         )
         latency = round((time.time() - start_time) * 1000, 2)
         if resp.status_code == 202:
-            print(f" [✓] 3. NATS Ingestion Acknowledged in {latency} ms (HTTP 202 Accepted)")
+            print(f" [✓] 3. Ingestion acknowledged in {latency} ms (HTTP 202 Accepted)")
             print("\n" + "="*58)
-            print(" 📊 ASYNCHRONOUS EVENT-DRIVEN METRICS")
+            print(" Asynchronous Event Metrics")
             print("="*58)
-            print(" • Invocation Mode     : Asynchronous NATS Decoupled")
-            print(f" • Client Wait Latency : 🔥 {latency} ms (Zero Blocking)")
-            print(" • Background Pipeline : C-Libwebp transcoding to processed/ bucket")
-            print(" • Scale-to-Zero State : Handled via NATS queue-worker")
+            print(" • Mode                : Asynchronous NATS Decoupled")
+            print(f" • Client Latency      : {latency} ms")
+            print(" • Pipeline            : WebP transcoding to processed/ bucket")
+            print(" • Scaling Behavior    : Handled via NATS queue-worker")
             print("="*58)
-            print(" 🎉 Image queued for background WebP transcoding successfully!\n")
+            print(" [✓] Image queued for background transcoding.\n")
             return
         else:
-            print(f"❌ Async invocation failed: HTTP {resp.status_code}")
+            print(f" [✗] Async invocation failed: HTTP {resp.status_code}")
             return
 
     # Synchronous Invocation
@@ -131,16 +131,16 @@ def main():
         webp_info = metrics.get("optimized_webp", {})
         telemetry = data.get("telemetry", {})
 
-        print(f" [✓] 3. Serverless Processing Completed in {latency} ms (HTTP 200 OK)")
+        print(f" [✓] 3. Serverless processing completed in {latency} ms (HTTP 200 OK)")
         print("\n" + "="*58)
-        print(" 📊 OPTIMIZATION RESULTS & ARTIFACTS")
+        print(" Optimization Results & Telemetry")
         print("="*58)
-        print(f" • Original Dimensions : {metrics.get('dimensions', {}).get('width')}x{metrics.get('dimensions', {}).get('height')} px")
-        print(f" • WebP Optimized File : {webp_info.get('key')} ({webp_info.get('size_bytes', 0):,} bytes)")
-        print(f" • Bandwidth Savings   : 🔥 {webp_info.get('compression_savings')}")
-        print(f" • Transcoding Engine  : WebP (High-Performance C-Libwebp)")
-        print(f" • Security Hardening  : Passed (Magic Bytes + ReadOnly RootFS + EXIF Sanitized)")
-        print(f" • Execution Compute   : {telemetry.get('execution_duration_ms')} ms (256 MB RAM / 4-Core Burst)")
+        print(f" • Dimensions          : {metrics.get('dimensions', {}).get('width')}x{metrics.get('dimensions', {}).get('height')} px")
+        print(f" • WebP File           : {webp_info.get('key')} ({webp_info.get('size_bytes', 0):,} bytes)")
+        print(f" • Bandwidth Reduction : {webp_info.get('compression_savings')}")
+        print(f" • Transcoding Engine  : Pillow (libwebp C-extension)")
+        print(f" • Security Context    : Magic bytes validated, read-only rootfs, EXIF stripped")
+        print(f" • Compute Duration    : {telemetry.get('execution_duration_ms')} ms")
         print(f" • Est. Invocation Cost: {telemetry.get('self_hosted_k8s_spot_cost_usd')}")
         print("="*58)
 
@@ -148,12 +148,12 @@ def main():
         os.makedirs(DEFAULT_OUTPUT_DIR, exist_ok=True)
         webp_local = os.path.join(DEFAULT_OUTPUT_DIR, webp_info.get('key', 'optimized.webp'))
         client.fget_object("processed", webp_info.get('key'), webp_local)
-        print(f"\n 🎉 Downloaded WebP optimized result to image_processing folder:\n  👉 {webp_local}\n")
+        print(f"\n Downloaded optimized result:\n  {webp_local}\n")
 
     else:
         status = resp.status_code if resp else 'No response'
         text = resp.text if resp else ''
-        print(f"❌ Processing failed with status {status}: {text}")
+        print(f" [✗] Processing failed with status {status}: {text}")
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,5 @@
 # ==============================================================================
-# 🛠️ SERVERLESS DEVSECOPS & FINOPS PIPELINE DEVELOPER CLI
-# Maintainer: Qadeer Aslam (qadeer016)
+# Serverless DevSecOps & FinOps Pipeline Developer CLI
 # ==============================================================================
 
 .PHONY: help install test test-unit test-chaos audit verify-cosign bench status optimize dashboard clean
@@ -18,7 +17,7 @@ NC := \033[0m
 help: ## Show this help message and exit
 	@echo -e "${CYAN}${BOLD}"
 	@echo "=============================================================="
-	@echo " 🛠️  SERVERLESS DEVSECOPS & FINOPS MASTER MAKEFILE"
+	@echo " Serverless DevSecOps & FinOps Pipeline CLI"
 	@echo "=============================================================="
 	@echo -e "${NC}"
 	@echo -e "${YELLOW}Usage:${NC} make [target]"

@@ -31,9 +31,8 @@ except ImportError:
 
 def main():
     print("==================================================================")
-    print(" ⚡ PURE S3 EVENT-DRIVEN REACTIVE SERVERLESS INGESTION")
-    print(" Lead Engineer: Qadeer Aslam (qadeer016)")
-    print(" Paradigm     : Zero-Client Blocking / S3 Event Webhook over NATS")
+    print(" S3 Event-Driven Reactive Serverless Ingestion")
+    print(" Pipeline: S3 ObjectCreated Notification -> OpenFaaS Ingestion")
     print("==================================================================")
 
     if not os.path.exists(SAMPLE_IMAGE):
@@ -46,8 +45,8 @@ def main():
     event_id = str(uuid.uuid4())
 
     # Step 1: Upload Raw Object to S3 (Only Action Performed by Client)
-    print(f" 📁 Image Source: {base_name} ({file_size:,} bytes)")
-    print(" [1/3] 📤 Client PUT object to MinIO S3 bucket 'uploads'...")
+    print(f" Source Image: {base_name} ({file_size:,} bytes)")
+    print(" [1/3] Uploading raw object to MinIO S3 bucket 'uploads'...")
     client = Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=False)
     for b in ["uploads", "processed"]:
         if not client.bucket_exists(b):
@@ -58,7 +57,7 @@ def main():
     print(f"       [✓] S3 Object Committed: minio://uploads/{base_name}")
 
     # Step 2: MinIO Asynchronously Generates S3 Bucket Event Notification
-    print(" [2/3] ⚡ MinIO S3 Notification Engine emits 's3:ObjectCreated:Put' CloudEvent...")
+    print(" [2/3] Constructing CloudEvent payload (s3:ObjectCreated:Put)...")
     s3_event_payload = {
         "Records": [
             {
@@ -88,7 +87,7 @@ def main():
     }
 
     # Step 3: Trigger Serverless Pipeline via Async Ingestion Endpoint with W3C TraceContext
-    print(" [3/3] 🚀 Dispatching CloudEvent to OpenFaaS Ingestion Gateway...")
+    print(" [3/3] Dispatching CloudEvent to OpenFaaS Ingestion Gateway...")
     t0 = time.time()
     
     # Generate W3C Distributed Traceparent
@@ -117,7 +116,7 @@ def main():
             otel = telemetry.get("otel_spans", {})
 
             print("\n==================================================================")
-            print(" 📊 EVENT-DRIVEN PIPELINE EXECUTION & DISTRIBUTED TELEMETRY")
+            print(" Event-Driven Pipeline Execution & Telemetry Summary")
             print("==================================================================")
             print(f" • HTTP Status Code       : {resp.status_code} OK (Event Processed)")
             print(f" • Event Ingestion Mode   : Asynchronous Reactive Trigger (s3:ObjectCreated)")
@@ -127,10 +126,10 @@ def main():
             print(f"     ├── Transcode Span   : {otel.get('c_transcode_span_ms', 31.5)} ms (WebP C-Engine)")
             print(f"     └── S3 Persist Span  : {otel.get('s3_persist_span_ms', 0.8)} ms")
             print(f" • Total Roundtrip Latency: {latency_ms} ms")
-            print(f" • Bandwidth Savings      : 🔥 {metrics.get('optimized_webp', {}).get('compression_savings', '37.06%')}")
+            print(f" • Bandwidth Reduction    : {metrics.get('optimized_webp', {}).get('compression_savings', '37.06%')}")
             print(f" • Est. Compute Cost      : {telemetry.get('estimated_aws_cost_usd', '$0.00000010')}")
             print("==================================================================")
-            print(" ✅ Pure Event-Driven Serverless Pipeline Verified with 10/10 Score!")
+            print(" [✓] Event-driven ingestion pipeline verified successfully.")
             print("==================================================================")
         else:
             print(f" [✗] Invocation failed: HTTP {resp.status_code} - {resp.text}")

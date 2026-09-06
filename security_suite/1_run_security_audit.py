@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🛡️ Live Enterprise DevSecOps Security Audit & Automated Compliance Engine
+DevSecOps Security Audit & Compliance Engine
 Specification: Cloud-Native DevSecOps Baseline & Security Controls
 """
 
@@ -15,9 +15,8 @@ def run_cmd(cmd):
         return ""
 
 print("==================================================================")
-print(" 🛡️  LIVE ENTERPRISE DEVSECOPS COMPLIANCE AUDIT")
-print(" Lead Engineer: Qadeer Aslam (qadeer016)")
-print(" Framework    : Cloud-Native DevSecOps Security Baseline")
+print(" DevSecOps Compliance & Security Baseline Audit")
+print(" Target: image-processor-app (Namespace: openfaas-fn)")
 print("==================================================================")
 
 checks_passed = 0
@@ -115,7 +114,6 @@ else:
 score = round((checks_passed / total_checks) * 10, 1)
 
 print("\n" + "="*66)
-print(f" 🏆 DEVSECOPS COMPLIANCE SCORE: {score}/10.0 (100% PRODUCTION READY)")
+print(f" DevSecOps Compliance Audit Score: {score}/10.0")
+print(f" Verification Status: {checks_passed}/{total_checks} baseline controls satisfied")
 print("="*66)
-print(f" All {checks_passed}/{total_checks} Enterprise Security & FinOps Controls are Active and Verified.")
-print("==================================================================")

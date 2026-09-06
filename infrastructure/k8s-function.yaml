@@ -23,7 +23,7 @@ spec:
         security.defense: "read-only-rootfs-network-isolated"
     spec:
       terminationGracePeriodSeconds: 1
-      # 🚀 Performance: Storage Proximity Pod Affinity (Minimizes Inter-Node Latency)
+      # Storage Proximity Pod Affinity (Minimizes Inter-Node Latency)
       affinity:
         podAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -36,7 +36,7 @@ spec:
                   values:
                   - minio
               topologyKey: "kubernetes.io/hostname"
-      # 🛡️ DevSecOps Container Hardening: Non-Root Execution & Seccomp
+      # Container Hardening: Non-Root Execution & Seccomp
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -48,7 +48,7 @@ spec:
       - name: image-processor-app
         image: docker.io/qadeer016/image-processor-app:latest
         imagePullPolicy: IfNotPresent
-        # 🔒 Hardened Security Context: Read-Only Root Filesystem & Dropped Capabilities
+        # Security Context: Read-Only Root Filesystem & Dropped Capabilities
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000
@@ -78,7 +78,7 @@ spec:
           value: "10s"
         - name: MINIO_ENDPOINT
           value: "minio-service.minio.svc.cluster.local:9000"
-        # 🛡️ Credential Injection via Kubernetes Secret
+        # Credential Injection via Kubernetes Secret
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
@@ -101,7 +101,7 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "4000m"
-        # 💾 In-Memory RAM Scratch Space (Physical disk writes completely blocked)
+        # Ephemeral RAM Scratch Space (Physical disk writes completely blocked)
         volumeMounts:
         - name: temp-scratch
           mountPath: /tmp

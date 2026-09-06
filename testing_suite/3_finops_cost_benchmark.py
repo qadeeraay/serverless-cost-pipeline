@@ -42,12 +42,11 @@ def invoke_benchmark(request_id):
         return {"id": request_id, "status_code": 200, "duration_ms": simulated_dur}
 
 print("==================================================================")
-print(" 📊 FINOPS & CLOUD COST BENCHMARKING ENGINE")
-print(" Lead Engineer: Qadeer Aslam (qadeer016)")
-print(" Architecture : Serverless Infrastructure & FinOps Cost Optimization")
+print(" FinOps Latency & Cloud Cost Benchmark")
+print(" Target: OpenFaaS Serverless Runtime (:8080)")
 print("==================================================================")
 
-print(" [*] Firing 20 concurrent serverless function invocations...")
+print(" [*] Executing 20 concurrent serverless function invocations...")
 start_all = time.time()
 with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
     results = list(executor.map(invoke_benchmark, range(1, 21)))
@@ -67,7 +66,7 @@ print(f" [✓] Latency p95                : {p95} ms")
 print(f" [✓] Average Compute Duration   : {avg_dur} ms")
 
 print("\n" + "="*96)
-print(" 💰 MULTI-TIER CLOUD COST COMPARISON (FINOPS AT SCALE)")
+print(" Multi-Tier Cloud Cost Comparison (FinOps Analysis)")
 print("="*96)
 
 monthly_requests_tiers = [10_000, 100_000, 1_000_000, 10_000_000]
@@ -89,7 +88,7 @@ for volume in monthly_requests_tiers:
 print("="*96)
 
 print("\n" + "="*96)
-print(" 🧮 DYNAMIC MEMORY ALLOCATION COST CURVES (1,000,000 INVOCATIONS)")
+print(" Dynamic Memory Allocation Cost Curves (1,000,000 Invocations)")
 print("="*96)
 print(f"{'Memory Tier':<15} | {'Unit Pricing ($/GB-s)':<24} | {'Monthly AWS Lambda':<22} | {'OpenFaaS Private Spot':<22}")
 print("-" * 96)
@@ -98,5 +97,5 @@ for mem in [64, 128, 256, 512, 1024]:
     k_cost = round(1_000_000 * (avg_dur / 1000) * (mem / 1024) * 0.0000045, 3)
     print(f"{str(mem)+'MB':<15} | {'$0.0000166667':<24} | ${l_cost:<21.3f} | ${k_cost:<21.3f}")
 print("="*96)
-print(" 💡 FinOps Takeaway: Self-hosted Kubernetes Spot serverless yields >90% cost savings at scale.")
+print(" Takeaway: Self-hosted Kubernetes Spot serverless yields >90% cost savings over idle VMs.")
 print("==================================================================")

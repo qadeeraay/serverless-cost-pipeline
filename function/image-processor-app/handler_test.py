@@ -1,5 +1,5 @@
 """
-🧪 Automated Unit Testing Suite for Serverless Image Processor
+Automated Unit Testing Suite for Serverless Image Processor
 Specification: Cloud-Native DevSecOps Unit & Security Verification
 """
 
@@ -41,7 +41,7 @@ class TestImageProcessorSecurity(unittest.TestCase):
         self.assertIsNone(validate_magic_bytes(random_garbage))
 
     def test_path_traversal_validation(self):
-        """🛡️ Test that path traversal and dangerous characters are rejected."""
+        """Test that path traversal and dangerous characters are rejected."""
         self.assertTrue(validate_object_key("sample_photo.jpg"))
         self.assertTrue(validate_object_key("2026/08/raw_input.png"))
         self.assertFalse(validate_object_key("../../etc/passwd"))
@@ -50,7 +50,7 @@ class TestImageProcessorSecurity(unittest.TestCase):
         self.assertFalse(validate_object_key(""))
 
     def test_bucket_allowlist_enforcement(self):
-        """🛡️ Test that unauthorized bucket access is rejected with HTTP 403."""
+        """Test that unauthorized bucket access is rejected with HTTP 403."""
         class MaliciousBucketEvent:
             body = json.dumps({"bucket": "unauthorized-private-vault", "object": "stolen_data.png"})
 

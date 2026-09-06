@@ -1,18 +1,18 @@
-# Contributing to Serverless DevSecOps & FinOps Pipeline
+# Contributing Guidelines
 
-Thank you for your interest in contributing to the **Serverless Event-Driven Image Processing & FinOps Pipeline**! This document provides guidelines and workflows for proposing enhancements, fixing bugs, and submitting pull requests.
+Thank you for your interest in contributing to the **Serverless Event-Driven Image Processing & FinOps Pipeline**. This document provides guidelines and workflows for proposing enhancements, fixing bugs, and submitting pull requests.
 
 ---
 
-## 🏛️ Code of Conduct
+## Code of Conduct
 
 All contributors and maintainers are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please report unacceptable behavior through our security contact channels.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
-### 1. Prerequisites
+### Prerequisites
 Ensure you have the following tools installed locally:
 * **Docker** ($\ge 24.0$)
 * **Kind (Kubernetes in Docker)** ($\ge v0.20.0$)
@@ -20,13 +20,13 @@ Ensure you have the following tools installed locally:
 * **Python** ($\ge 3.12$)
 * **OpenSSL** (for ECDSA container signature verification)
 
-### 2. Fork and Clone
+### Fork and Clone
 ```bash
 git clone https://github.com/<your-username>/serverless-cost-pipeline.git
 cd serverless-cost-pipeline
 ```
 
-### 3. Setup Development Environment
+### Development Environment Setup
 ```bash
 # Create and activate virtual environment
 python3 -m venv .venv
@@ -38,26 +38,26 @@ pip install -r requirements-dev.txt
 
 ---
 
-## 🛠️ Development & Testing Workflow
+## Development & Testing Workflow
 
 We use a root `Makefile` to streamline local development tasks:
 
 | Command | Description |
 |---|---|
 | `make test` | Executes all unit tests and Chaos/OpenTelemetry resilience suites |
-| `make test-unit` | Executes the 10/10 Python unit test suite |
-| `make test-chaos` | Executes the 5/5 Chaos & OpenTelemetry tracing tests |
+| `make test-unit` | Executes the Python unit test suite |
+| `make test-chaos` | Executes Chaos & OpenTelemetry tracing tests |
 | `make audit` | Runs the 10/10 Enterprise DevSecOps compliance verification |
 | `make verify-cosign` | Validates ECDSA NIST P-256 cryptographic supply-chain signature |
 | `make bench` | Runs the multi-tier FinOps latency & cloud cost benchmark |
-| `make cluster-status` | Displays cluster pod fleet, HPA status, and storage health |
+| `make status` | Displays cluster pod fleet, HPA status, and storage health |
 | `make lint` | Validates Python syntax and runs static analysis |
 
 ---
 
-## 🛡️ DevSecOps & Quality Standards
+## Quality & Security Standards
 
-Before submitting any code, verify that your changes adhere to our **10/10 DevSecOps Baseline**:
+Before submitting any code, verify that your changes adhere to our **DevSecOps Baseline**:
 1. **Non-Root Execution**: Container runtimes must run under non-root user (`UID 1000`).
 2. **Immutable Filesystem**: `readOnlyRootFilesystem: true` must remain enforced.
 3. **Capability Stripping**: Linux capabilities must be explicitly dropped (`drop: ["ALL"]`).
@@ -68,7 +68,7 @@ Before submitting any code, verify that your changes adhere to our **10/10 DevSe
 
 ---
 
-## 🌿 Git Conventions & Pull Request Guidelines
+## Git Conventions & Pull Request Guidelines
 
 ### Branch Naming
 Use descriptive branch names with clear categorization:
@@ -94,5 +94,5 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 
 ---
 
-## 📜 License
+## License
 By contributing to this repository, you agree that your contributions will be licensed under the project's [MIT License](LICENSE).

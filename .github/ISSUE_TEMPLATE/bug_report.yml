@@ -1,0 +1,53 @@
+name: 🐛 Bug Report
+description: File a bug report to help us improve the pipeline.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please provide as much detail as possible to help reproduce the issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the problem...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: What steps did you follow to encounter the bug?
+      placeholder: |
+        1. Run './cluster_manage.sh start'
+        2. Execute 'python3 testing_suite/1_upload_and_process.py ...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+      placeholder: Expected 200 OK with WebP transcoded image...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs & Outputs
+      description: Paste any command output, pod logs, or stack traces here.
+      render: shell
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where are you running the serverless pipeline?
+      options:
+        - Kind (Local Docker)
+        - Managed Cloud Kubernetes (EKS / GKE / AKS)
+        - Bare-metal K3s / K8s
+        - Standalone Python Simulation
+    validations:
+      required: true

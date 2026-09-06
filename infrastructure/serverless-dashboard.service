@@ -1,0 +1,15 @@
+[Unit]
+Description=Serverless Pipeline Observability Dashboard
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/qadeer/serverless-cost-pipeline
+ExecStart=/usr/bin/python3 /home/qadeer/serverless-cost-pipeline/dashboard/server.py
+Restart=always
+RestartSec=3s
+StandardOutput=append:/home/qadeer/serverless-cost-pipeline/dashboard/dashboard.log
+StandardError=append:/home/qadeer/serverless-cost-pipeline/dashboard/dashboard.log
+
+[Install]
+WantedBy=default.target

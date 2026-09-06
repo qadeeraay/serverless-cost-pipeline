@@ -61,5 +61,6 @@ infrastructure/credentials-velero
 *.key
 *.pem
 *.id_rsa
+*.pid
 security_suite/security_keys/*.key
 

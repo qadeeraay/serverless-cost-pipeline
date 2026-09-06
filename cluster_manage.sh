@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
 # ==============================================================================
-# 🚀 ADVANCED SERVERLESS CLUSTER & PERSISTENCE CONTROLLER (v2.0)
-# Maintainer  : Qadeer Aslam (qadeer016)
-# Project     : Serverless Event-Driven Image Processing & FinOps Pipeline
-# Core Stack  : Kubernetes, OpenFaaS, NATS JetStream, MinIO S3, Velero DR
+# Serverless Cluster & Persistence Controller
+# Core Stack: Kubernetes, OpenFaaS, NATS JetStream, MinIO S3, Velero DR
 # ==============================================================================
 
 set -e
@@ -16,11 +14,16 @@ if [ -z "$KIND_CONTAINER" ]; then
     KIND_CONTAINER="serverless-cluster-control-plane"
 fi
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DASHBOARD_PID_FILE="${PROJECT_DIR}/dashboard/.dashboard.pid"
+DASHBOARD_LOG_FILE="${PROJECT_DIR}/dashboard/dashboard.log"
+
 # Color scheme
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 banner() {
@@ -38,10 +41,11 @@ usage() {
     echo -e " ${YELLOW}Usage:${NC} ./cluster_manage.sh [command]"
     echo ""
     echo -e " ${BOLD}Commands:${NC}"
-    echo -e "   ${GREEN}start${NC}         -> Resume cluster and reconcile workloads"
-    echo -e "   ${YELLOW}stop${NC}          -> Graceful shutdown (0% CPU/RAM, state preserved)"
-    echo -e "   ${CYAN}status${NC}        -> Component health, pod metrics, and HPA status"
-    echo -e "   ${CYAN}restart${NC}       -> Restart Kind cluster container"
+    echo -e "   ${GREEN}start${NC}         -> Resume cluster, reconcile workloads, and start dashboard"
+    echo -e "   ${YELLOW}stop${NC}          -> Graceful shutdown (cluster + dashboard)"
+    echo -e "   ${CYAN}status${NC}        -> Component health, pod metrics, HPA, and dashboard status"
+    echo -e "   ${CYAN}restart${NC}       -> Restart Kind cluster container and dashboard"
+    echo -e "   ${CYAN}dashboard${NC}     -> Manage dashboard [start|stop|restart|logs|status]"
     echo -e "   ${GREEN}optimize${NC}      -> Re-apply configs and rolling restart function"
     echo -e "   ${GREEN}heal${NC}          -> Reconcile any stalled pods or rollouts"
     echo -e "   ${CYAN}backup${NC}        -> Create on-demand Velero backup to MinIO S3"
@@ -71,17 +75,81 @@ wait_for_openfaas() {
     kubectl wait --for=condition=available --timeout=45s deployment/image-processor-app -n openfaas-fn 2>/dev/null || true
 }
 
+start_dashboard() {
+    if [ -f "$DASHBOARD_PID_FILE" ] && kill -0 "$(cat "$DASHBOARD_PID_FILE")" 2>/dev/null; then
+        echo -e " ${GREEN}[✓] Observability Dashboard already running (PID: $(cat "$DASHBOARD_PID_FILE")).${NC}"
+        echo -e " • Dashboard UI     : http://127.0.0.1:8888"
+        return 0
+    fi
+
+    # Terminate any orphan process holding port 8888
+    if command -v lsof &>/dev/null; then
+        local orphan_pid
+        orphan_pid=$(lsof -ti:8888 2>/dev/null || true)
+        if [ -n "$orphan_pid" ]; then
+            kill -9 "$orphan_pid" 2>/dev/null || true
+        fi
+    fi
+
+    echo -e " Starting Observability Dashboard in background..."
+    nohup python3 "${PROJECT_DIR}/dashboard/server.py" > "$DASHBOARD_LOG_FILE" 2>&1 &
+    local new_pid=$!
+    echo "$new_pid" > "$DASHBOARD_PID_FILE"
+    sleep 1
+
+    if kill -0 "$new_pid" 2>/dev/null; then
+        echo -e " ${GREEN}[✓] Observability Dashboard online (PID: $new_pid).${NC}"
+        echo -e " • Dashboard UI     : http://127.0.0.1:8888"
+    else
+        echo -e " ${YELLOW}[!] Dashboard failed to start. Check: $DASHBOARD_LOG_FILE${NC}"
+    fi
+}
+
+stop_dashboard() {
+    if [ -f "$DASHBOARD_PID_FILE" ]; then
+        local pid
+        pid=$(cat "$DASHBOARD_PID_FILE")
+        if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null || true
+            sleep 0.5
+            kill -9 "$pid" 2>/dev/null || true
+        fi
+        rm -f "$DASHBOARD_PID_FILE"
+    fi
+    if command -v lsof &>/dev/null; then
+        local orphan_pid
+        orphan_pid=$(lsof -ti:8888 2>/dev/null || true)
+        if [ -n "$orphan_pid" ]; then
+            kill -9 "$orphan_pid" 2>/dev/null || true
+        fi
+    fi
+}
+
+dashboard_status() {
+    if [ -f "$DASHBOARD_PID_FILE" ] && kill -0 "$(cat "$DASHBOARD_PID_FILE")" 2>/dev/null; then
+        echo -e "   • Dashboard Server: ${GREEN}${BOLD}RUNNING${NC} (PID: $(cat "$DASHBOARD_PID_FILE")) on http://127.0.0.1:8888"
+    elif command -v lsof &>/dev/null && lsof -ti:8888 &>/dev/null; then
+        local pid
+        pid=$(lsof -ti:8888 | head -n 1)
+        echo -e "   • Dashboard Server: ${GREEN}${BOLD}RUNNING${NC} (PID: $pid) on http://127.0.0.1:8888"
+    else
+        echo -e "   • Dashboard Server: ${YELLOW}STOPPED${NC} (Run: ./cluster_manage.sh dashboard start)"
+    fi
+}
+
 case "$1" in
     stop|down|pause|shutdown)
         banner
-        echo -e " ==> Stopping cluster container ($KIND_CONTAINER)..."
-        echo -e " [1/3] Flushing in-memory sync buffers..."
+        echo -e " ==> Stopping cluster and services ($KIND_CONTAINER)..."
+        echo -e " [1/4] Stopping background Observability Dashboard..."
+        stop_dashboard
+        echo -e " [2/4] Flushing in-memory sync buffers..."
         sync || true
-        echo -e " [2/3] Gracefully suspending Kind cluster container..."
+        echo -e " [3/4] Gracefully suspending Kind cluster container..."
         docker stop -t 5 "$KIND_CONTAINER" >/dev/null
-        echo -e " [3/3] Releasing host resources..."
+        echo -e " [4/4] Releasing host resources..."
         echo ""
-        echo -e " ${GREEN}[✓] Cluster suspended.${NC}"
+        echo -e " ${GREEN}[✓] Cluster and services suspended.${NC}"
         echo -e " • Host resource usage: 0% CPU / 0 MB RAM"
         echo -e " • State: Preserved in Docker persistent volume"
         echo -e " • Resume command: ./cluster_manage.sh start\n"
@@ -90,14 +158,13 @@ case "$1" in
     start|up|resume|boot)
         banner
         echo -e " ==> Starting serverless pipeline cluster ($KIND_CONTAINER)..."
-        echo -e " [1/5] Starting Docker container..."
+        echo -e " [1/6] Starting Docker container..."
         docker start "$KIND_CONTAINER" >/dev/null
-        echo -e " [2/5] Checking Kubernetes control plane..."
+        echo -e " [2/6] Checking Kubernetes control plane..."
         wait_for_apiserver
-        echo -e " [3/5] Waiting for OpenFaaS Gateway and MinIO..."
+        echo -e " [3/6] Waiting for OpenFaaS Gateway and MinIO..."
         wait_for_openfaas
-        echo -e " [4/5] Reconciling NetworkPolicy, secrets, and pod specs..."
-        PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        echo -e " [4/6] Reconciling NetworkPolicy, secrets, and pod specs..."
         kubectl apply -f "${PROJECT_DIR}/security_suite/network_policy_and_secrets.yaml" >/dev/null 2>&1 || true
         kubectl create configmap function-handler-code \
           --from-file=handler.py="${PROJECT_DIR}/function/image-processor-app/handler.py" \
@@ -108,12 +175,16 @@ case "$1" in
         kubectl rollout restart deployment image-processor-app -n openfaas-fn >/dev/null 2>&1 || true
         kubectl rollout status deployment image-processor-app -n openfaas-fn --timeout=35s >/dev/null 2>&1 || true
         
-        echo -e " [5/5] Active Pod Summary:"
+        echo -e " [5/6] Active Pod Summary:"
         kubectl get pods -n openfaas-fn
+        echo ""
+        echo -e " [6/6] Ensuring Observability Dashboard is running..."
+        start_dashboard
         echo ""
         echo -e " ${GREEN}[✓] Cluster online and ready.${NC}"
         echo -e " • Gateway Endpoint : http://127.0.0.1:8080"
-        echo -e " • MinIO Storage    : http://127.0.0.1:9000\n"
+        echo -e " • MinIO Storage    : http://127.0.0.1:9000"
+        echo -e " • Dashboard UI     : http://127.0.0.1:8888\n"
         ;;
 
     status|health|check)
@@ -148,7 +219,44 @@ case "$1" in
         echo -e " ${BOLD}Velero S3 Backup Controller:${NC}"
         VELERO_PHASE=$(kubectl get backupstoragelocation -n velero -o jsonpath='{.items[0].status.phase}' 2>/dev/null || echo "Not Installed")
         echo -e "   • Backup Target (MinIO S3): ${GREEN}${BOLD}${VELERO_PHASE}${NC}"
+
         echo ""
+        echo -e " ${BOLD}Observability Dashboard:${NC}"
+        dashboard_status
+        echo ""
+        ;;
+
+    dashboard|dash|ui)
+        banner
+        case "$2" in
+            stop)
+                echo -e " ==> Stopping Observability Dashboard..."
+                stop_dashboard
+                echo -e " ${GREEN}[✓] Dashboard stopped.${NC}\n"
+                ;;
+            restart)
+                echo -e " ==> Restarting Observability Dashboard..."
+                stop_dashboard
+                start_dashboard
+                echo ""
+                ;;
+            logs)
+                if [ -f "$DASHBOARD_LOG_FILE" ]; then
+                    tail -n 30 "$DASHBOARD_LOG_FILE"
+                else
+                    echo -e " ${YELLOW}[!] No dashboard log file found at $DASHBOARD_LOG_FILE${NC}"
+                fi
+                ;;
+            status|"")
+                echo -e " ==> Observability Dashboard Status:\n"
+                dashboard_status
+                echo ""
+                if ! ( [ -f "$DASHBOARD_PID_FILE" ] && kill -0 "$(cat "$DASHBOARD_PID_FILE")" 2>/dev/null ); then
+                    start_dashboard
+                    echo ""
+                fi
+                ;;
+        esac
         ;;
 
     backup|snapshot)
@@ -178,7 +286,6 @@ case "$1" in
         ;;
 
     backup-test|dr-test|restore)
-        PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         "${PROJECT_DIR}/infrastructure/backup_restore_demo.sh"
         ;;
 
@@ -192,24 +299,26 @@ case "$1" in
     optimize|harden|heal|fix|repair)
         banner
         echo -e " ==> Reconciling performance and security configuration...\n"
-        PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         
-        echo -e " [1/4] Applying NetworkPolicy and secrets..."
+        echo -e " [1/5] Applying NetworkPolicy and secrets..."
         kubectl apply -f "${PROJECT_DIR}/security_suite/network_policy_and_secrets.yaml" >/dev/null
         
-        echo -e " [2/4] Syncing handler configmap..."
+        echo -e " [2/5] Syncing handler configmap..."
         kubectl create configmap function-handler-code \
           --from-file=handler.py="${PROJECT_DIR}/function/image-processor-app/handler.py" \
           -n openfaas-fn --dry-run=client -o yaml | kubectl apply -f - >/dev/null
           
-        echo -e " [3/4] Reconciling pod specifications and HPA..."
+        echo -e " [3/5] Reconciling pod specifications and HPA..."
         kubectl apply -f "${PROJECT_DIR}/infrastructure/k8s-function.yaml" >/dev/null
         kubectl apply -f "${PROJECT_DIR}/infrastructure/function.yaml" >/dev/null
         kubectl apply -f "${PROJECT_DIR}/infrastructure/hpa.yaml" >/dev/null
         
-        echo -e " [4/4] Performing rolling deployment restart..."
+        echo -e " [4/5] Performing rolling deployment restart..."
         kubectl rollout restart deployment image-processor-app -n openfaas-fn >/dev/null
         kubectl rollout status deployment image-processor-app -n openfaas-fn --timeout=35s >/dev/null
+
+        echo -e " [5/5] Ensuring Observability Dashboard is running..."
+        start_dashboard
         
         echo -e "\n ${GREEN}[✓] All controls reconciled successfully.${NC}\n"
         ;;
@@ -221,13 +330,13 @@ case "$1" in
         wait_for_apiserver
         wait_for_openfaas
         kubectl get pods -n openfaas-fn
+        start_dashboard
         echo -e " ${GREEN}[✓] Restart complete.${NC}\n"
         ;;
 
     audit|test|eval|evaluate)
         banner
         echo -e " ==> Running verification test suite...\n"
-        PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
         python3 "${PROJECT_DIR}/security_suite/1_run_security_audit.py"
         echo ""
         python3 "${PROJECT_DIR}/security_suite/2_verify_cosign_signature.py"

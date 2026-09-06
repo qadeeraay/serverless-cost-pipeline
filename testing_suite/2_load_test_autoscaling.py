@@ -284,7 +284,7 @@ def run_lifecycle_proof():
 # MODE 3: HIGH-CONCURRENCY AUTOSCALING LOAD TEST (HPA 1->5)
 # =============================================================
 def worker_task(session, use_real_image=True):
-    global success_count, error_count, stop_flag
+    global success_count
     
     if use_real_image:
         payload = {"bucket": "uploads", "object": "modern_architecture.jpg"}
@@ -309,7 +309,6 @@ def worker_task(session, use_real_image=True):
                 time.sleep(0.25)
 
 def monitor_loop(start_time, duration, target_concurrency):
-    global success_count, error_count, stop_flag
     
     while not stop_flag:
         elapsed = round(time.time() - start_time, 1)

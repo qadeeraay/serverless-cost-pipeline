@@ -485,7 +485,8 @@ serverless-cost-pipeline/
 
 **Qadeer Aslam**  
 * GitHub: [@qadeeraay](https://github.com/qadeeraay)  
-* Email: [qadeeraslam016@gmail.com](mailto:qadeeraslam016@gmail.com)  
+* LinkedIn: [Qadeer Aslam](https://www.linkedin.com/in/qadeer-aslam-devops/)  
+* Email: [qadeeraslam888@gmail.com](mailto:qadeeraslam888@gmail.com)  
 
 ---
 

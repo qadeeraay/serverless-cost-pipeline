@@ -37,7 +37,7 @@ This project enforces 10 core container, network, and application security contr
 If you discover a potential security vulnerability or misconfiguration, please **do not open a public GitHub issue**.
 
 ### Reporting Process
-1. Contact the maintainer directly via email: **qadeeraslam016@gmail.com** (or open a private GitHub Security Advisory).
+1. Contact the maintainer directly via email: **qadeeraslam888@gmail.com** (or open a private GitHub Security Advisory).
 2. Include the following details in your report:
    - Type of issue (e.g. privilege escalation, container escape, bypass of input filtering, denial of service).
    - Component affected (e.g. `handler.py`, `infrastructure/k8s-function.yaml`, `nats-openfaas-connector.py`).

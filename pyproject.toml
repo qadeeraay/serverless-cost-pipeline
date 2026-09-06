@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
-    { name = "Qadeer Aslam", email = "qadeeraslam016@gmail.com" }
+    { name = "Qadeer Aslam", email = "qadeeraslam888@gmail.com" }
 ]
 keywords = [
     "serverless",
@@ -33,6 +33,11 @@ classifiers = [
     "Topic :: System :: Distributed Computing",
     "Topic :: Multimedia :: Graphics"
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/qadeeraay/serverless-cost-pipeline"
+"Repository" = "https://github.com/qadeeraay/serverless-cost-pipeline"
+"LinkedIn" = "https://www.linkedin.com/in/qadeer-aslam-devops/"
 
 [tool.pytest.ini_options]
 minversion = "7.0"

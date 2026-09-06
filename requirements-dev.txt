@@ -9,5 +9,5 @@ nats-py>=2.7.0
 pytest>=8.0.0
 pytest-cov>=4.1.0
 flake8>=7.0.0
-bandit>=1.7.8
+bandit>=1.9.4
 black>=24.2.0

@@ -334,9 +334,9 @@ def handle(event, context=None):
     # 7. FinOps & OpenTelemetry W3C Distributed Tracing
     execution_time_ms = round((time.time() - start_time) * 1000, 2)
     actual_compute = processing_results.get("compute_duration_ms", 22.4)
-    raw_trace = hashlib.md5(f"{object_name or 'bench'}-{start_time}".encode()).hexdigest()
-    otel_trace_id = raw_trace[:32].ljust(32, '0')
-    otel_span_id = raw_trace[16:32]
+    raw_trace = hashlib.sha256(f"{object_name or 'bench'}-{start_time}".encode()).hexdigest()
+    otel_trace_id = raw_trace[:32]
+    otel_span_id = raw_trace[32:48]
     w3c_traceparent = f"00-{otel_trace_id}-{otel_span_id}-01"
     pod_host = os.getenv("HOSTNAME", "image-processor-pod")
 

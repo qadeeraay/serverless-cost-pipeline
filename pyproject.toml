@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "serverless-cost-pipeline"
+version = "2.0.0"
+description = "Serverless Event-Driven Image Processing & FinOps Pipeline on Kubernetes"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Qadeer Aslam", email = "qadeeraslam888@gmail.com" }
+]
+keywords = [
+    "serverless",
+    "kubernetes",
+    "openfaas",
+    "nats-jetstream",
+    "minio",
+    "finops",
+    "devsecops",
+    "cosign",
+    "image-processing",
+    "webp"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: Multimedia :: Graphics"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/qadeeraay/serverless-cost-pipeline"
+"Repository" = "https://github.com/qadeeraay/serverless-cost-pipeline"
+"LinkedIn" = "https://www.linkedin.com/in/qadeer-aslam-devops/"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["function/image-processor-app", "testing_suite"]
+python_files = ["*_test.py", "test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["function/image-processor-app"]
+omit = ["*_test.py"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 120

@@ -1,0 +1,30 @@
+name: Feature Request
+description: Propose an idea or enhancement for the pipeline.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to improve the performance, FinOps cost savings, or DevSecOps security of this pipeline? We'd love to hear it!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: What would you like to see added or enhanced?
+      placeholder: Describe the feature or improvement...
+    validations:
+      required: true
+  - type: textarea
+    id: problem-solved
+    attributes:
+      label: Problem or Use Case
+      description: What specific problem or FinOps/DevSecOps challenge does this solve?
+      placeholder: E.g., Adding AVIF transcoding allows an additional 20% egress savings...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Proposed Implementation or Alternatives
+      description: How should this be implemented? Have you considered any alternative designs?
+      placeholder: Describe architectural choices or tradeoffs...

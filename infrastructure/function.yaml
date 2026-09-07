@@ -1,0 +1,33 @@
+apiVersion: openfaas.com/v1
+kind: Function
+metadata:
+  name: image-processor-app
+  namespace: openfaas-fn
+spec:
+  name: image-processor-app
+  image: docker.io/qadeer016/image-processor-app:latest
+  readOnlyRootFilesystem: true
+  labels:
+    com.openfaas.scale.min: "1"
+    com.openfaas.scale.max: "5"
+    com.openfaas.scale.factor: "20"
+  annotations:
+    com.openfaas.profile: "finops-optimized"
+    pipeline.tier: "production-serverless"
+    security.hardening: "read-only-rootfs-least-privilege"
+    pipeline.domain: "finops-image-processing"
+  secrets:
+    - minio-creds
+  environment:
+    MINIO_ENDPOINT: "minio-service.minio.svc.cluster.local:9000"
+    MINIO_SECURE: "false"
+    write_debug: "true"
+    read_timeout: "10s"
+    write_timeout: "10s"
+    exec_timeout: "10s"
+  limits:
+    memory: 256Mi
+    cpu: 2000m
+  requests:
+    memory: 64Mi
+    cpu: 200m

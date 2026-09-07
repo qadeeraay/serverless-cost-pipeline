@@ -5,6 +5,8 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  schedule:
+    - cron: '0 2 * * 2,5' # Tuesdays and Fridays at 02:00 UTC automated CI validation
   workflow_dispatch:
 
 concurrency:

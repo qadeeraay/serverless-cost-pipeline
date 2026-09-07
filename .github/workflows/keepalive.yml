@@ -1,0 +1,29 @@
+name: Repository Activity & Keepalive Heartbeat
+
+on:
+  schedule:
+    - cron: '0 0 1,15 * *' # 1st and 15th of every month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  heartbeat:
+    name: GitHub Actions Heartbeat Ping
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Record Activity Heartbeat
+        run: |
+          echo "## 💓 Repository Activity & Keepalive Heartbeat" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | Active & Operational |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trigger** | Scheduled Heartbeat |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Preventing GitHub Actions from auto-disabling scheduled cron workflows." >> $GITHUB_STEP_SUMMARY

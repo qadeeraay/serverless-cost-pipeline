@@ -1,6 +1,8 @@
 # Serverless Event-Driven Image Processing & FinOps Pipeline
 
 [![CI/CD Pipeline](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/ci.yml)
+[![CodeQL Security](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/codeql-analysis.yml)
+[![Daily FinOps Benchmark](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/daily-finops-benchmark.yml/badge.svg)](https://github.com/qadeeraay/serverless-cost-pipeline/actions/workflows/daily-finops-benchmark.yml)
 [![DevSecOps Compliance](https://img.shields.io/badge/DevSecOps%20Compliance-10%2F10%20Verified-success?style=flat-square&logo=shield)](security_suite)
 [![FinOps Cost Reduction](https://img.shields.io/badge/FinOps%20Cost%20Reduction-99.8%25-blue?style=flat-square)](testing_suite)
 [![Cosign Container Signed](https://img.shields.io/badge/Cosign%20ECDSA-P--256%20Verified-brightgreen?style=flat-square&logo=docker)](security_suite/security_keys)

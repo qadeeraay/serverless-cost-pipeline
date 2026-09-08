@@ -14,7 +14,7 @@
 
 ---
 
-## Why I Built This: Slashing 24/7 Idle Waste & Cloud Egress Bloat
+## Cloud Economics: The Cost of Always-On Virtual Machines vs. Scale-to-Zero
 
 In high-volume web platforms and media-heavy applications, running dedicated 24/7 virtual machines just to resize user uploads is an enormous financial sinkhole. Organizations end up paying for 100% of compute capacity during off-peak lulls, while serving uncompressed legacy PNG and JPEG assets steadily inflates AWS CloudFront and CDN egress bills.
 

@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# MinIO S3 -> NATS JetStream Bucket Notification Bridge
-# Configures MinIO S3 bucket notifications to publish s3:ObjectCreated:Put events
-# directly to the NATS JetStream broker subject (s3.events.uploads).
-# Prerequisites: mc (MinIO client) installed, MinIO and NATS deployments running.
-# ==============================================================================
+# Configures MinIO bucket notifications to publish Put events to NATS JetStream (s3.events.uploads)
 set -euo pipefail
 
 MINIO_ALIAS="local-minio"

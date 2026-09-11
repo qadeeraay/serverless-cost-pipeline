@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# 🔄 Velero S3 Backup & Disaster Recovery Verification Suite
-# Maintainer: Qadeer Aslam (qadeer016)
-# Specification: Disaster Recovery Validation & S3 State Recovery
-# ==============================================================================
+# Velero S3 backup and disaster recovery verification script
 
 set -eo pipefail
 

@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-# ==============================================================================
-# Serverless Cluster & Persistence Controller
-# Core Stack: Kubernetes, OpenFaaS, NATS JetStream, MinIO S3, Velero DR
-# ==============================================================================
+# Serverless cluster and persistence lifecycle controller
 
 set -e
 

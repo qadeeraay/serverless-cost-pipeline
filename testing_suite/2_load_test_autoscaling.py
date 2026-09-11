@@ -74,9 +74,7 @@ def banner(title):
     print(f" {title}")
     print("=" * 70)
 
-# =============================================================
-# MODE 1: AUTOMATED DEVSECOPS & FUNCTION UNIT TESTS (10/10)
-# =============================================================
+# DevSecOps baseline & function unit tests
 def run_unit_tests():
     banner("MODE 1: DEVSECOPS & FUNCTION UNIT TESTS (10/10)")
     print(" Scope         : DevSecOps Baseline & Logic Verification")
@@ -190,9 +188,7 @@ def run_unit_tests():
     print("=" * 70)
     return passed == total
 
-# =============================================================
-# MODE 2: SERVERLESS SCALE-TO-ZERO & COLD-START LIFECYCLE
-# =============================================================
+# Scale-to-zero and cold-start lifecycle validation
 def run_lifecycle_proof():
     banner("MODE 2: SERVERLESS SCALE-TO-ZERO & LIFECYCLE PROOF")
     print(" Target Gateway: " + OPENFAAS_GATEWAY)
@@ -280,9 +276,7 @@ def run_lifecycle_proof():
     # Restore 1 warm pod for ongoing testing
     run_cmd("kubectl scale deployment -n openfaas-fn image-processor-app --replicas=1 2>/dev/null")
 
-# =============================================================
-# MODE 3: HIGH-CONCURRENCY AUTOSCALING LOAD TEST (HPA 1->5)
-# =============================================================
+# High-concurrency autoscaling load test (HPA scale out)
 def worker_task(session, use_real_image=True):
     global success_count
     
@@ -409,9 +403,7 @@ def run_load_test(concurrency=25, duration=30, use_real_image=True):
     print(" Run 'kubectl get pods -n openfaas-fn -w' to observe scale-down cooldown.")
     print("=" * 70)
 
-# =============================================================
-# INTERACTIVE TERMINAL MENU
-# =============================================================
+# Interactive terminal menu for manual runs
 def show_interactive_menu():
     while True:
         print("\n" + "=" * 70)
@@ -449,9 +441,7 @@ def show_interactive_menu():
         else:
             print(" ⚠️ Invalid choice. Please enter a number between 1 and 5.")
 
-# =============================================================
-# MAIN ENTRYPOINT
-# =============================================================
+# CLI parser and entrypoint
 def main():
     if len(sys.argv) == 1:
         # No CLI flags passed -> Display interactive menu!

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# Velero S3 (MinIO) Setup & Backup Controller
-# ==============================================================================
+# Velero S3 (MinIO) setup and backup controller
 
 set -eo pipefail
 

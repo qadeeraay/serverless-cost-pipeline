@@ -43,7 +43,7 @@ def main():
     base_name = os.path.basename(SAMPLE_IMAGE)
     event_id = str(uuid.uuid4())
 
-    # Step 1: Upload Raw Object to S3 (Only Action Performed by Client)
+    # Upload source payload directly to S3 bucket
     print(f" Source Image: {base_name} ({file_size:,} bytes)")
     print(" [1/3] Uploading raw object to MinIO S3 bucket 'uploads'...")
     client = Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=False)
@@ -55,7 +55,7 @@ def main():
         client.put_object("uploads", base_name, f, file_size, content_type="image/jpeg")
     print(f"       [✓] S3 Object Committed: minio://uploads/{base_name}")
 
-    # Step 2: MinIO Asynchronously Generates S3 Bucket Event Notification
+    # Build CloudEvent notification payload matching S3 Put structure
     print(" [2/3] Constructing CloudEvent payload (s3:ObjectCreated:Put)...")
     s3_event_payload = {
         "Records": [
@@ -85,7 +85,7 @@ def main():
         ]
     }
 
-    # Step 3: Trigger Serverless Pipeline via Async Ingestion Endpoint with W3C TraceContext
+    # Post event into OpenFaaS async queue with propagated W3C traceparent
     print(" [3/3] Dispatching CloudEvent to OpenFaaS Ingestion Gateway...")
     t0 = time.time()
     

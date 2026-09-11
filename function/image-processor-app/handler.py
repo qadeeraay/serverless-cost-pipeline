@@ -186,7 +186,7 @@ def handle(event, context=None):
             "headers": {**SECURITY_HEADERS},
             "body": json.dumps({
                 "status": "security_alert",
-                "message": f"Security Policy Violation: Malicious path traversal or illegal characters detected in object key."
+                "message": "Security Policy Violation: Malicious path traversal or illegal characters detected in object key."
             })
         }
 

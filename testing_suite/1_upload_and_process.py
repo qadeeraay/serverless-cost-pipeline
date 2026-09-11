@@ -7,8 +7,6 @@ Usage: python3 1_upload_and_process.py <path_to_image>
 import sys
 import os
 import time
-import json
-import subprocess
 import requests
 from minio import Minio
 
@@ -62,7 +60,7 @@ def main():
 
     # 3. Trigger Serverless OpenFaaS Function
     endpoint = f"{OPENFAAS_GATEWAY}/async-function/image-processor-app" if is_async else f"{OPENFAAS_GATEWAY}/function/image-processor-app"
-    print(f" [*] 2. Triggering function endpoint...")
+    print(" [*] 2. Triggering function endpoint...")
     start_time = time.time()
     
     pass_output = os.popen('kubectl get secret -n openfaas basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode').read().strip()
@@ -138,8 +136,8 @@ def main():
         print(f" • Dimensions          : {metrics.get('dimensions', {}).get('width')}x{metrics.get('dimensions', {}).get('height')} px")
         print(f" • WebP File           : {webp_info.get('key')} ({webp_info.get('size_bytes', 0):,} bytes)")
         print(f" • Bandwidth Reduction : {webp_info.get('compression_savings')}")
-        print(f" • Transcoding Engine  : Pillow (libwebp C-extension)")
-        print(f" • Security Context    : Magic bytes validated, read-only rootfs, EXIF stripped")
+        print(" • Transcoding Engine  : Pillow (libwebp C-extension)")
+        print(" • Security Context    : Magic bytes validated, read-only rootfs, EXIF stripped")
         print(f" • Compute Duration    : {telemetry.get('execution_duration_ms')} ms")
         print(f" • Est. Invocation Cost: {telemetry.get('self_hosted_k8s_spot_cost_usd')}")
         print("="*58)

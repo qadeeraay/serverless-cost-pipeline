@@ -39,7 +39,7 @@ async def publish_to_dlq(js, original_payload: bytes, reason: str):
 async def handle_message(msg, js):
     try:
         payload = msg.data
-        body = json.loads(payload)
+        json.loads(payload)
 
         # Normalize into the same {Records:[{s3:{bucket,object}}]} shape the
         # handler already parses, so no handler.py change is required.

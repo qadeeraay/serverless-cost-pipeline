@@ -15,6 +15,15 @@ def run_cmd(cmd):
     except Exception:
         return ""
 
+def read_file_safe(path):
+    if not os.path.exists(path):
+        return ""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+
 print("==================================================================")
 print(" DevSecOps Compliance & Security Baseline Audit")
 print(" Target: image-processor-app (Namespace: openfaas-fn)")
@@ -24,6 +33,8 @@ checks_passed = 0
 total_checks = 10
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+k8s_file = os.path.join(BASE_DIR, "infrastructure", "k8s-function.yaml")
+k8s_content = read_file_safe(k8s_file)
 
 # Check 1: NetworkPolicy Micro-Segmentation (Egress Isolation)
 np = run_cmd("kubectl get networkpolicy isolate-function-traffic -n openfaas-fn --no-headers 2>/dev/null")
@@ -36,8 +47,7 @@ else:
 
 # Check 2: Read-Only Root Filesystem
 ro_fs = run_cmd("kubectl get deploy image-processor-app -n openfaas-fn -o jsonpath='{.spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem}' 2>/dev/null")
-k8s_file = os.path.join(BASE_DIR, "infrastructure", "k8s-function.yaml")
-if ro_fs == "true" or (os.path.exists(k8s_file) and "readOnlyRootFilesystem: true" in open(k8s_file).read()):
+if ro_fs == "true" or "readOnlyRootFilesystem: true" in k8s_content:
     print(" [✓] 2. Immutable Read-Only Root Filesystem (readOnlyRootFS) : ENFORCED (Malware Persistence Blocked)")
     checks_passed += 1
 else:
@@ -45,7 +55,7 @@ else:
 
 # Check 3: Dropped Linux Capabilities
 caps = run_cmd("kubectl get deploy image-processor-app -n openfaas-fn -o jsonpath='{.spec.template.spec.containers[0].securityContext.capabilities.drop}' 2>/dev/null")
-if "ALL" in caps or (os.path.exists(k8s_file) and "- ALL" in open(k8s_file).read()):
+if "ALL" in caps or "- ALL" in k8s_content:
     print(" [✓] 3. Linux Kernel Capabilities Drop (Least Privilege)    : ENFORCED (drop: ['ALL'])")
     checks_passed += 1
 else:
@@ -53,7 +63,7 @@ else:
 
 # Check 4: Non-Root Execution Context
 non_root = run_cmd("kubectl get deploy image-processor-app -n openfaas-fn -o jsonpath='{.spec.template.spec.securityContext.runAsNonRoot}' 2>/dev/null")
-if non_root == "true" or (os.path.exists(k8s_file) and "runAsNonRoot: true" in open(k8s_file).read()):
+if non_root == "true" or "runAsNonRoot: true" in k8s_content:
     print(" [✓] 4. Non-Root Execution Context (UID 1000)                : ENFORCED (No Root Privileges)")
     checks_passed += 1
 else:
@@ -61,7 +71,7 @@ else:
 
 # Check 5: Seccomp Syscall Filtering
 seccomp = run_cmd("kubectl get deploy image-processor-app -n openfaas-fn -o jsonpath='{.spec.template.spec.securityContext.seccompProfile.type}' 2>/dev/null")
-if seccomp == "RuntimeDefault" or (os.path.exists(k8s_file) and "RuntimeDefault" in open(k8s_file).read()):
+if seccomp == "RuntimeDefault" or "RuntimeDefault" in k8s_content:
     print(" [✓] 5. Seccomp Syscall Filter (Kernel Isolation)           : ENFORCED (RuntimeDefault Profile)")
     checks_passed += 1
 else:
@@ -69,7 +79,7 @@ else:
 
 # Check 6: Secret Credential Injection
 sec_ref = run_cmd("kubectl get deploy image-processor-app -n openfaas-fn -o jsonpath='{.spec.template.spec.containers[0].env[*].valueFrom.secretKeyRef.name}' 2>/dev/null")
-if "minio-creds" in sec_ref or (os.path.exists(k8s_file) and "minio-creds" in open(k8s_file).read()):
+if "minio-creds" in sec_ref or "minio-creds" in k8s_content:
     print(" [✓] 6. Encrypted Secret Management (secretKeyRef)           : ENFORCED (Zero Plaintext In Git)")
     checks_passed += 1
 else:
@@ -77,7 +87,7 @@ else:
 
 # Check 7: RAM-Backed Ephemeral Scratch Space
 vol_type = run_cmd("kubectl get deploy image-processor-app -n openfaas-fn -o jsonpath='{.spec.template.spec.volumes[0].emptyDir.medium}' 2>/dev/null")
-if vol_type == "Memory" or (os.path.exists(k8s_file) and "medium: Memory" in open(k8s_file).read()):
+if vol_type == "Memory" or "medium: Memory" in k8s_content:
     print(" [✓] 7. Ephemeral In-Memory Scratch Space (/tmp)            : ENFORCED (32MB RAM Disk)")
     checks_passed += 1
 else:
@@ -87,14 +97,11 @@ else:
 hpa_file = os.path.join(BASE_DIR, "infrastructure", "hpa.yaml")
 hpa = run_cmd("kubectl get hpa image-processor-app-hpa -n openfaas-fn -o jsonpath='{.spec.behavior.scaleDown.stabilizationWindowSeconds}' 2>/dev/null")
 hpa_file_match = False
-if os.path.exists(hpa_file):
-    try:
-        hpa_content = open(hpa_file).read()
-        match = re.search(r"scaleDown:[\s\S]*?stabilizationWindowSeconds:\s*(\d+)", hpa_content)
-        if match and int(match.group(1)) <= 30:
-            hpa_file_match = True
-    except Exception:
-        pass
+hpa_content = read_file_safe(hpa_file)
+if hpa_content:
+    match = re.search(r"scaleDown:[\s\S]*?stabilizationWindowSeconds:\s*(\d+)", hpa_content)
+    if match and int(match.group(1)) <= 30:
+        hpa_file_match = True
 
 if (hpa and hpa.isdigit() and int(hpa) <= 30) or hpa_file_match:
     print(" [✓] 8. Rapid Elastic Autoscaling & Cooldown Policy          : ENFORCED (1 -> 5 Replicas / Rapid Cooldown <=30s)")
@@ -112,11 +119,12 @@ else:
 
 # Check 10: Decompression Bomb Safeguard, Magic Bytes & Input Sanitization
 handler_file = os.path.join(BASE_DIR, "function", "image-processor-app", "handler.py")
-if (os.path.exists(handler_file) and 
-    "MAX_IMAGE_PIXELS = 30_000_000" in open(handler_file).read() and 
-    "validate_magic_bytes" in open(handler_file).read() and
-    "ALLOWED_BUCKETS" in open(handler_file).read() and
-    "validate_object_key" in open(handler_file).read()):
+handler_content = read_file_safe(handler_file)
+if (handler_content and 
+    "MAX_IMAGE_PIXELS = 30_000_000" in handler_content and 
+    "validate_magic_bytes" in handler_content and 
+    "ALLOWED_BUCKETS" in handler_content and 
+    "validate_object_key" in handler_content):
     print(" [✓] 10. Application DoS, Magic Bytes & Input Sanitization   : ENFORCED (30MP Cap + Header & Path Filter)")
     checks_passed += 1
 else:

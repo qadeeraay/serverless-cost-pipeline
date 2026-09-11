@@ -10,11 +10,11 @@ import sys
 from PIL import Image
 
 try:
-    from .handler import validate_magic_bytes, validate_object_key, handle, strip_exif_metadata, _load_secret, ALLOWED_BUCKETS
+    from .handler import validate_magic_bytes, validate_object_key, handle, strip_exif_metadata, _load_secret
 except (ImportError, ValueError):
     # Fallback when run directly or discovered by unittest
     sys.path.insert(0, os.path.dirname(__file__))
-    from handler import validate_magic_bytes, validate_object_key, handle, strip_exif_metadata, _load_secret, ALLOWED_BUCKETS
+    from handler import validate_magic_bytes, validate_object_key, handle, strip_exif_metadata, _load_secret
 
 class TestImageProcessorSecurity(unittest.TestCase):
 

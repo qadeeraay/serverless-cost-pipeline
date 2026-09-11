@@ -211,9 +211,9 @@ def run_lifecycle_proof():
     
     total, ready = get_live_pod_info()
     print(f" • Active Function Pods : {ready} pods (Scale-to-Zero Active)")
-    print(f" • RAM Consumed         : 0 MB")
-    print(f" • CPU Consumed         : 0 millicores")
-    print(f" • Hourly Compute Spend : $0.00000000 (Cost Avoidance)")
+    print(" • RAM Consumed         : 0 MB")
+    print(" • CPU Consumed         : 0 millicores")
+    print(" • Hourly Compute Spend : $0.00000000 (Cost Avoidance)")
     print(" [✓] Idle state confirmed: zero compute consumed.")
 
     # Stage 2: Cold Start Awakening (0 -> 1)
@@ -229,7 +229,7 @@ def run_lifecycle_proof():
         time.sleep(0.3)
     
     cold_start_duration = round((time.time() - cold_start_begin) * 1000, 1)
-    print(f" • Pod Status          : 1/1 Running & Ready")
+    print(" • Pod Status          : 1/1 Running & Ready")
     print(f" • Cold Start Wakeup   : {cold_start_duration} ms")
 
     # Send verification invocation
@@ -257,8 +257,8 @@ def run_lifecycle_proof():
     time.sleep(2)
     total, ready = get_live_pod_info()
     print(f" • Peak Function Replicas: {total} / 5 Pods Active ({ready} ready)")
-    print(f" • Load Distribution     : Round-robin across pods via OpenFaaS Gateway")
-    print(f" • Horizontal Autoscaler : HPA triggered by CPU threshold (>10%)")
+    print(" • Load Distribution     : Round-robin across pods via OpenFaaS Gateway")
+    print(" • Horizontal Autoscaler : HPA triggered by CPU threshold (>10%)")
     print(" [✓] Replicas expanded horizontally to absorb burst load.")
 
     # Stage 4: Cooldown & Scale-to-Zero
@@ -271,8 +271,8 @@ def run_lifecycle_proof():
         time.sleep(0.4)
     total, ready = get_live_pod_info()
     print(f" • Final Pod Replicas   : {total} pods (Scale-to-Zero Active)")
-    print(f" • Freed Memory         : 5x 256MB = 1,280 MB (1.28 GB) RAM released")
-    print(f" • Freed CPU Capacity   : 5x 2.0 Cores = 10 CPU cores released")
+    print(" • Freed Memory         : 5x 256MB = 1,280 MB (1.28 GB) RAM released")
+    print(" • Freed CPU Capacity   : 5x 2.0 Cores = 10 CPU cores released")
     print("-" * 70)
     print(" [✓] Serverless lifecycle demonstrated (scale-to-zero verified)")
     print("=" * 70)
@@ -347,13 +347,13 @@ def run_load_test(concurrency=25, duration=30, use_real_image=True):
     initial_total, initial_ready = get_live_pod_info()
 
     banner("MODE 3: HORIZONTAL AUTOSCALING LOAD TEST")
-    print(f" Target Function   : image-processor-app (OpenFaaS on Kubernetes)")
+    print(" Target Function   : image-processor-app (OpenFaaS on Kubernetes)")
     print(f" Gateway Endpoint  : {OPENFAAS_GATEWAY}")
     print(f" Worker Concurrency: {concurrency} parallel clients")
     print(f" Duration          : {duration} seconds")
     print(f" Initial Replicas  : {initial_ready} ready / {initial_total} total")
     print(f" Workload Mode     : {'MinIO Image Optimization' if use_real_image else 'Synthetic Payload'}")
-    print(f" HPA Threshold     : Target 10% CPU -> Scale-Up (Max: 5 Pods)")
+    print(" HPA Threshold     : Target 10% CPU -> Scale-Up (Max: 5 Pods)")
     print("-" * 70)
     print(" Starting load generation...\n")
 

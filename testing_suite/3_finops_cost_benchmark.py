@@ -6,7 +6,6 @@ Specification: Cloud Cost Reduction & Multi-Tier Analytics
 
 import time
 import requests
-import json
 import os
 import concurrent.futures
 import statistics
@@ -36,7 +35,7 @@ def invoke_benchmark(request_id):
             "duration_ms": duration_ms,
             "telemetry": r.json().get("telemetry", {}) if r.status_code == 200 else {}
         }
-    except Exception as e:
+    except Exception:
         # Fallback to local high-speed C-engine benchmark
         simulated_dur = round(18.5 + (request_id % 4) * 0.5, 2)
         return {"id": request_id, "status_code": 200, "duration_ms": simulated_dur}

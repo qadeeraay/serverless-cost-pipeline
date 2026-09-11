@@ -75,9 +75,9 @@ def main():
         print("="*60)
         print(f" • Image Reference   : {IMAGE_NAME}")
         print(f" • Verified Digest   : {digest}")
-        print(f" • Key Type          : ECDSA NIST P-256")
+        print(" • Key Type          : ECDSA NIST P-256")
         print(f" • Verification Key  : {PUBLIC_KEY}")
-        print(f" • Policy Verdict    : ADMIT (Signature Valid)")
+        print(" • Policy Verdict    : ADMIT (Signature Valid)")
         print("="*60)
     else:
         print(f" [✗] Signature Verification Failed: {verify_res.stderr}")

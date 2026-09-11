@@ -46,8 +46,8 @@ def format_headers(resp):
     return resp['headers']
 
 def format_response(resp):
-    if resp == None:
-        return ('', 200)
+    if resp is None:
+        return ('', 200, [])
     
     if type(resp) is dict:
         statusCode = format_status_code(resp)

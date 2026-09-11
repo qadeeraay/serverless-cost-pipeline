@@ -63,7 +63,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                         else:
                             age_str = f"{delta_sec // 3600}h"
                     except Exception:
-                        pass
+                        age_str = "1m"
 
                 if phase == "Running" and ready_bool:
                     running_count += 1
@@ -207,7 +207,8 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(res).encode())
             return
 
-        return super().do_GET()
+        super().do_GET()
+        return
 
 def run_server(port=PORT):
     socketserver.TCPServer.allow_reuse_address = True

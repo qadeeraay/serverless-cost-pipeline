@@ -41,7 +41,6 @@ def main():
 
     file_size = os.path.getsize(SAMPLE_IMAGE)
     base_name = os.path.basename(SAMPLE_IMAGE)
-    s3_key = f"uploads/{base_name}"
     event_id = str(uuid.uuid4())
 
     # Step 1: Upload Raw Object to S3 (Only Action Performed by Client)
@@ -119,9 +118,9 @@ def main():
             print(" Event-Driven Pipeline Execution & Telemetry Summary")
             print("==================================================================")
             print(f" • HTTP Status Code       : {resp.status_code} OK (Event Processed)")
-            print(f" • Event Ingestion Mode   : Asynchronous Reactive Trigger (s3:ObjectCreated)")
+            print(" • Event Ingestion Mode   : Asynchronous Reactive Trigger (s3:ObjectCreated)")
             print(f" • W3C Traceparent        : {telemetry.get('w3c_traceparent', w3c_traceparent)}")
-            print(f" • OpenTelemetry Spans    :")
+            print(" • OpenTelemetry Spans    :")
             print(f"     ├── S3 Fetch Span    : {otel.get('s3_fetch_span_ms', 1.2)} ms")
             print(f"     ├── Transcode Span   : {otel.get('c_transcode_span_ms', 31.5)} ms (WebP C-Engine)")
             print(f"     └── S3 Persist Span  : {otel.get('s3_persist_span_ms', 0.8)} ms")

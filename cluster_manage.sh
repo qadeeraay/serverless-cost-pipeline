@@ -4,12 +4,21 @@
 
 set -e
 
-# Auto-detect Kind container name
-KIND_CONTAINER=$(docker ps -a --filter "name=control-plane" --format "{{.Names}}" 2>/dev/null | head -n 1 || true)
-
-if [ -z "$KIND_CONTAINER" ]; then
+# Resolve Serverless Kind control-plane container, explicitly excluding openbao
+if docker ps -a --format "{{.Names}}" 2>/dev/null | grep -q "^serverless-cluster-control-plane$"; then
     KIND_CONTAINER="serverless-cluster-control-plane"
+else
+    KIND_CONTAINER=$(docker ps -a --filter "name=control-plane" --format "{{.Names}}" 2>/dev/null | grep -v "openbao" | head -n 1 || true)
+    if [ -z "$KIND_CONTAINER" ]; then
+        KIND_CONTAINER="serverless-cluster-control-plane"
+    fi
 fi
+
+# Explicitly scope kubectl calls to the serverless cluster context
+KIND_CONTEXT="kind-serverless-cluster"
+kubectl() {
+    command kubectl --context="${KIND_CONTEXT}" "$@"
+}
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DASHBOARD_PID_FILE="${PROJECT_DIR}/dashboard/.dashboard.pid"
@@ -143,7 +152,7 @@ case "$1" in
         echo -e " [2/4] Flushing in-memory sync buffers..."
         sync || true
         echo -e " [3/4] Gracefully suspending Kind cluster container..."
-        docker stop -t 5 "$KIND_CONTAINER" >/dev/null
+        docker stop -t 5 "$KIND_CONTAINER" >/dev/null 2>&1 || true
         echo -e " [4/4] Releasing host resources..."
         echo ""
         echo -e " ${GREEN}[✓] Cluster and services suspended.${NC}"

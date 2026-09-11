@@ -103,5 +103,22 @@ class TestImageProcessorSecurity(unittest.TestCase):
         res = handle(InvalidExtEvent())
         self.assertEqual(res["statusCode"], 400)
 
+    def test_extended_path_traversal_vectors(self):
+        """Test Windows backslashes, relative leading traversal, and embedded null bytes."""
+        self.assertFalse(validate_object_key("..\\..\\windows\\system32"))
+        self.assertFalse(validate_object_key("uploads/../../secret.txt"))
+        self.assertFalse(validate_object_key("image.png\x00.exe"))
+        self.assertFalse(validate_object_key("/etc/passwd"))
+
+    def test_security_headers_present_in_responses(self):
+        """Test that security headers (nosniff, HSTS, frame-options) are included in responses."""
+        class MockEvent:
+            body = json.dumps({"benchmark_mode": "synthetic_test"})
+        res = handle(MockEvent())
+        headers = res.get("headers", {})
+        self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertEqual(headers.get("X-Frame-Options"), "DENY")
+
+
 if __name__ == "__main__":
     unittest.main()

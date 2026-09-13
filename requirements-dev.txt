@@ -1,5 +1,5 @@
 # Core Runtime Dependencies
-minio>=7.2.0
+minio>=7.2.20
 Pillow>=10.2.0
 requests>=2.31.0
 urllib3>=2.1.0
